@@ -1,0 +1,63 @@
+/* ---------- controles ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;border-radius:999px;font-size:13px;font-weight:500;letter-spacing:.02em;text-decoration:none;transition:background .2s,color .2s,border-color .2s;white-space:nowrap}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.6}
+.btn.solid{background:var(--ink);color:#fff}
+.btn.solid:hover{background:var(--deep)}
+.btn.ghost{border:1px solid var(--line2);color:var(--ink);background:var(--panel)}
+.btn.ghost:hover{border-color:var(--ink)}
+.btn.danger{color:var(--bad);border:1px solid rgba(160,73,59,.35);background:var(--panel)}
+.btn.small{height:34px;padding:0 14px;font-size:12px}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.icon-btn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:var(--ink);position:relative}
+.icon-btn:hover{background:var(--tint)}
+.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.5}
+.dot{position:absolute;top:4px;right:4px;min-width:18px;height:18px;border-radius:9px;background:var(--wait);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 5px}
+
+.field{display:grid;gap:6px}
+.field label,.label{font-size:12px;color:var(--muted)}
+.input,.field input,.field select,.field textarea{width:100%;border:1px solid var(--line2);background:var(--panel);border-radius:8px;padding:10px 12px;outline:none;transition:border-color .2s}
+.field textarea{min-height:110px;resize:vertical;line-height:1.5}
+.input:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
+.field .help{font-size:12px;color:var(--muted)}
+.row{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.switch input{appearance:none;width:40px;height:22px;border-radius:999px;background:var(--line2);position:relative;transition:background .2s;cursor:pointer;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch input:checked{background:var(--ok)}
+.switch input:checked::after{transform:translateX(18px)}
+
+.seg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.seg button{height:34px;padding:0 14px;border-radius:999px;color:var(--muted);font-size:13px;border:1px solid transparent}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.seg button .n{opacity:.7;margin-left:6px;font-size:11px}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.card h2{font-family:var(--serif);font-weight:500;font-size:24px;color:var(--ink);margin:0 0 16px}
+.muted{color:var(--muted)}
+.empty{padding:50px 20px;text-align:center;color:var(--muted)}
+.empty .mono{width:30px;margin:0 auto 14px;color:var(--line2)}
+.err{color:var(--bad);font-size:13px}
+.okmsg{color:var(--ok);font-size:13px}
+
+/* ---------- status ---------- */
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge.ok{color:var(--ok);background:rgba(94,122,90,.12)}
+.badge.wait{color:var(--wait);background:rgba(183,121,58,.13)}
+.badge.info{color:var(--info);background:rgba(86,112,127,.12)}
+.badge.done{color:var(--ink);background:var(--tint)}
+.badge.bad{color:var(--bad);background:rgba(160,73,59,.1)}
+
+/* ---------- tabela ---------- */
+.table-wrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+table.t{width:100%;border-collapse:collapse;min-width:760px}
+.t th{text-align:left;font-weight:500;font-size:12px;color:var(--muted);padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+.t td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t tr:last-child td{border-bottom:0}
+.t tbody tr{cursor:pointer;transition:background .15s}
+.t tbody tr:hover{background:#FCF9F7}
+.t tr.new td:first-child{box-shadow:inset 3px 0 0 var(--wait)}
+.t .num{text-align:right;white-space:nowrap}
+.t .code{font-family:var(--serif);font-size:18px;color:var(--ink)}
+.thumb{width:44px;height:54px;border-radius:6px;object-fit:cover;background:var(--sand);display:block}

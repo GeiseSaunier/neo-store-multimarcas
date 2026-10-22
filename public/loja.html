@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Neo Store Multimarcas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/loja/css/base.css">
+<link rel="stylesheet" href="/loja/css/header.css">
+<link rel="stylesheet" href="/loja/css/hero.css">
+<link rel="stylesheet" href="/loja/css/sections.css">
+<link rel="stylesheet" href="/loja/css/footer.css">
+<link rel="stylesheet" href="/loja/css/overlays.css">
+<link rel="stylesheet" href="/loja/css/responsive.css">
+
+</head>
+<body>
+
+<div class="strip">Bolsas e calçados 100% originais · Entrega no mesmo dia em Parintins · Até 3x sem juros</div>
+
+<header class="site">
+  <div class="wrap hbar">
+    <div class="left" style="display:flex;align-items:center;gap:6px">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-label="Abrir menu"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h12"/></svg></button>
+      <a class="brand" href="#topo" aria-label="Neo Store Multimarcas, início"><span class="mono"></span><span class="word"></span></a>
+    </div>
+    <nav class="main" aria-label="Principal">
+      <span class="nav-pill" aria-hidden="true"></span>
+      <a href="#loja" data-go="todos">Coleção</a>
+      <div class="dd"><a href="#loja" data-go="capodarte">Capodarte</a><div class="menu"><a href="#loja" data-go="capodarte:bolsas">Bolsas</a><a href="#loja" data-go="capodarte:carteiras">Carteiras</a></div></div>
+      <div class="dd"><a href="#loja" data-go="carmen">Carmen Steffens</a><div class="menu"><a href="#loja" data-go="carmen:bolsas">Bolsas</a><a href="#loja" data-go="carmen:carteiras">Carteiras</a><a href="#loja" data-go="carmen:calcados">Calçados</a></div></div>
+      <a href="#entrega">Entrega</a>
+      <a href="#sobre">A loja</a>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="searchBtn" aria-label="Buscar"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/></svg></button>
+      <button class="icon-btn hide-s" id="favBtn" aria-label="Favoritos"><svg viewBox="0 0 24 24"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10Z"/></svg><span class="badge" id="favCount">0</span></button>
+      <button class="icon-btn" id="cartBtn" aria-label="Sacola"><svg viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12H6.2L5 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="badge" id="cartCount">0</span></button>
+    </div>
+  </div>
+</header>
+
+<main id="topo">
+<section class="hero" style="padding:0">
+  <div class="pattern" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="hero-copy">
+      <h1>Estilo escolhido<br>a dedo, <em>peça<br>por peça.</em></h1>
+      <p class="lead">Roupas, relógios e acessórios das marcas que admiramos, reunidos num só lugar. Curadoria pensada para quem se veste com intenção.</p>
+      <div class="cta-row">
+        <a class="btn solid" href="#loja">Ver a coleção</a>
+        <a class="btn ghost" href="#loja" data-go="capodarte:bolsas">Bolsas Capodarte</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>100%</strong>peças originais</div>
+        <div><strong>3x</strong>sem juros no cartão</div>
+        <div><strong>Mesmo dia</strong>entrega em Parintins</div>
+      </div>
+    </div>
+    <div class="stage" id="stage" aria-hidden="true">
+      <svg class="ring" viewBox="0 0 400 400">
+        <defs><path id="circ" d="M200,200 m-176,0 a176,176 0 1,1 352,0 a176,176 0 1,1 -352,0"/></defs>
+        <text><textPath href="#circ" startOffset="0" textLength="1100" lengthAdjust="spacing">NEO STORE · MULTIMARCAS · NEO STORE · MULTIMARCAS · </textPath></text>
+      </svg>
+      <div class="disc"></div>
+      <div class="tilt" id="tilt"><span class="mono"></span><div class="glint" id="glint"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="categorias">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><h2>Por onde começar</h2><p>Escolha uma marca e veja as peças.</p></div>
+    </div>
+    <div class="cats reveal" id="cats"></div>
+  </div>
+</section>
+
+<section id="loja" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div><h2>A coleção</h2><p id="resultInfo">Peças selecionadas para esta estação.</p></div>
+    </div>
+    <div class="toolbar">
+      <div class="tabs" id="tabs" role="group" aria-label="Filtrar por categoria"></div>
+      <label class="sort">Ordenar
+        <select id="sort">
+          <option value="rel">Em destaque</option>
+          <option value="asc">Menor preço</option>
+          <option value="desc">Maior preço</option>
+          
+        </select>
+      </label>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="benefits">
+  <div class="pattern" aria-hidden="true"></div>
+  <div class="wrap ben-grid">
+    <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M16 4 6 9v7c0 6 4.5 10 10 12 5.5-2 10-6 10-12V9L16 4Z"/><path d="m11.5 16 3 3 6-6"/></svg><h3>100% originais</h3><p>Capodarte, Carmen Steffens e Cs Club, com procedência garantida.</p></div>
+    <div class="ben reveal"><svg viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="18" rx="2"/><path d="M3 12h26M8 20h6"/></svg><h3>3x sem juros</h3><p>Parcele suas compras no cartão em até 3 vezes.</p></div>
+    <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M3 21h26l-3 5H6z"/><path d="M8 21V12h12l4 9M12 12V7h5v5"/><path d="M2 29c3 0 3-1.5 6-1.5S11 29 14 29s3-1.5 6-1.5 3 1.5 6 1.5" opacity=".6"/></svg><h3>Entrega rápida</h3><p>Mesmo dia em Parintins, barco para Maués e Manaus e Correios para todo o Brasil.</p></div>
+    <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M4 20l1.6-4.8A10.5 10.5 0 1 1 10 26.5L4 28Z" transform="translate(1 -2)"/></svg><h3>Atendimento próximo</h3><p>Tire dúvidas e acompanhe seu pedido pelo WhatsApp.</p></div>
+  </div>
+</section>
+
+<section id="sobre">
+  <div class="wrap edit">
+    <div class="frame reveal" aria-hidden="true"><img id="editImg" alt=""></div>
+    <div class="reveal">
+      <h2>Uma loja, muitas assinaturas.</h2>
+      <p>A Neo Store nasceu da vontade de juntar, num mesmo endereço, o que há de melhor em várias marcas. Cada peça passa pelo nosso olhar antes de chegar até você: caimento, acabamento e aquele detalhe que faz a diferença.</p>
+      <p>Do relógio que acompanha o dia inteiro à camisa de linho que vai do trabalho ao jantar, a ideia é simples: menos excesso, mais escolha certa.</p>
+      <blockquote>“Vestir bem é uma forma de dizer quem você é antes de dizer qualquer palavra.”</blockquote>
+    </div>
+  </div>
+</section>
+
+<section id="entrega" class="info">
+  <div class="wrap">
+    <div class="sec-head reveal"><div><h2>Originais, do nosso<br>balcão até você.</h2><p>Tudo o que você precisa saber antes de comprar.</p></div></div>
+    <div class="info-grid">
+      <div class="orig reveal">
+        <div class="seal" aria-hidden="true">
+          <svg viewBox="0 0 200 200"><defs><path id="sealc" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0"/></defs><text><textPath href="#sealc" textLength="500" lengthAdjust="spacing">100% ORIGINAL · NEO STORE · 100% ORIGINAL · NEO STORE ·</textPath></text></svg>
+          <span class="mono"></span>
+        </div>
+        <h3>Bolsas e calçados 100% originais</h3>
+        <p>Trabalhamos só com peças originais das marcas que vendemos. Você compra com a certeza de procedência e qualidade.</p>
+        <div class="brands-label">Nossas marcas</div>
+        <ul class="brands"><li>Capodarte</li><li>Carmen Steffens</li><li>Cs Club</li></ul>
+      </div>
+      <div class="ship reveal">
+        <div class="ship-intro"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26l-3 5H6z"/><path d="M8 21V12h12l4 9M12 12V7h5v5"/><path d="M2 29c3 0 3-1.5 6-1.5S11 29 14 29s3-1.5 6-1.5 3 1.5 6 1.5" opacity=".6"/></svg>
+          <p>Entregamos no mesmo dia em Parintins, pelo barco para Maués, Manaus e municípios vizinhos, e pelos Correios para todo o Brasil.</p></div>
+        <div class="rate"><div><h4>Parintins</h4><small>Entrega no mesmo dia</small></div><b>Mesmo dia</b></div>
+        <div class="rate"><div><h4>Maués</h4><small>Envio pelo barco</small></div><b>R$ 20,00</b></div>
+        <div class="rate"><div><h4>Manaus</h4><small>Barco + motoboy até a sua casa · cerca de 2 dias úteis</small></div><b>R$ 40 a R$ 60</b></div>
+        <div class="rate"><div><h4>Barco, rodoviária ou táxi</h4><small>Outros municípios · combinado pelo WhatsApp</small></div><b>R$ 20,00</b></div>
+        <div class="rate"><div><h4>Todo o Brasil</h4><small>Correios PAC ou SEDEX · prazo e valor calculados pelo CEP</small></div><b>Pelo CEP</b></div>
+        <p class="ship-note">Em Manaus, o valor varia conforme o bairro e já inclui o frete do barco e a entrega do motoboy. Para envio por barco, rodoviária ou táxi, fale com a gente no <a href="https://wa.me/5592984848096" target="_blank" rel="noopener">WhatsApp (92) 98484-8096</a>. O prazo de entrega não contabiliza feriados.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="news">
+  <div class="wrap reveal">
+    <h2>Seja a primeira a saber.</h2>
+    <p>Lançamentos, reposições e condições exclusivas direto no seu e-mail ou WhatsApp. Ganhe 10% na primeira compra.</p>
+    <div class="channel" id="channel" data-c="mail" role="group" aria-label="Como você quer receber">
+      <span class="pill" aria-hidden="true"></span>
+      <button type="button" data-c="mail" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>E-mail</button>
+      <button type="button" data-c="wa" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.2-3.6A8 8 0 1 1 8 19.1L4 20Z"/><path d="M9 9.5c.3 2 2 4 4.4 4.7l1.2-1.1 1.6.8c-.2.9-1 1.5-1.9 1.4C11.5 15 9 12.6 8.6 9.8c-.1-.9.5-1.6 1.4-1.8l.8 1.6-1.1.9"/></svg>WhatsApp</button>
+    </div>
+    <form id="newsForm" novalidate>
+      <label class="sr" for="newsEmail" id="newsLabel">Seu e-mail</label>
+      <input id="newsEmail" type="email" placeholder="Seu melhor e-mail" autocomplete="email">
+      <button class="btn solid" type="submit">Quero receber</button>
+    </form>
+    <p class="hint" id="newsHint" style="margin-top:14px;min-height:1.4em"></p>
+    <p class="consent">Ao se inscrever, você aceita receber mensagens da Neo Store. Dá para sair a qualquer momento.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="f-grid">
+      <div>
+        <span class="word"></span>
+        <p style="color:var(--muted);max-width:26em;margin:0">Bolsas e calçados originais Capodarte, Carmen Steffens e Cs Club, com curadoria e atendimento próximo.</p>
+        <div class="pay-icons"><span>PIX</span><span>Visa</span><span>Mastercard</span><span>Elo</span><span>Amex</span><span>Boleto</span></div>
+      </div>
+      <div><h4>Capodarte</h4><ul><li><a href="#loja" data-go="capodarte:bolsas">Bolsas</a></li><li><a href="#loja" data-go="capodarte:carteiras">Carteiras</a></li></ul><h4 style="margin-top:26px">Carmen Steffens</h4><ul><li><a href="#loja" data-go="carmen:bolsas">Bolsas</a></li><li><a href="#loja" data-go="carmen:carteiras">Carteiras</a></li><li><a href="#loja" data-go="carmen:calcados">Calçados</a></li></ul></div>
+      <div><h4>Ajuda</h4><ul><li><a href="#">Trocas e devoluções</a></li><li><a href="#entrega">Entrega e frete</a></li><li><a href="#entrega">Garantia de originalidade</a></li><li><a href="#">Formas de pagamento</a></li><li><a href="#">Guia de medidas</a></li></ul></div>
+      <div><h4>Contato</h4><ul><li><a href="https://wa.me/5592984848096" target="_blank" rel="noopener">WhatsApp (92) 98484-8096</a></li><li><a href="#">Instagram</a></li><li><a href="#">contato@neostore.com.br</a></li><li>Seg a sáb, 9h às 19h</li></ul></div>
+    </div>
+    <div class="f-bottom"><span>© 2026 Neo Store Multimarcas. Todos os direitos reservados.</span><button id="themeBtn" style="text-decoration:underline">Alternar tema claro/escuro</button></div>
+  </div>
+</footer>
+
+<!-- overlays -->
+<div class="scrim" id="scrim"></div>
+
+<aside class="drawer" id="drawer" aria-label="Sacola de compras" aria-hidden="true">
+  <div class="d-head"><h3 id="drawerTitle">Sua sacola</h3><button class="icon-btn" data-close aria-label="Fechar"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+  <div class="d-body" id="drawerBody"></div>
+  <div class="d-foot" id="drawerFoot"></div>
+</aside>
+
+<div class="modal" id="pModal" role="dialog" aria-modal="true" aria-label="Detalhes do produto"><div class="box" id="pBox"></div></div>
+<div class="modal" id="cModal" role="dialog" aria-modal="true" aria-label="Finalizar compra"><div class="box" id="cBox"></div></div>
+
+<div class="search" id="search" role="search">
+  <div class="wrap">
+    <input id="q" type="search" placeholder="O que você procura?" aria-label="Buscar produtos">
+    <button class="icon-btn" data-close aria-label="Fechar busca"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="wrap sugg" id="sugg"><span>Buscas frequentes:</span><button>bolsa</button><button>carteira</button><button>monograma</button><button>Carmen Steffens</button></div>
+</div>
+
+<nav class="mnav" id="mnav" aria-label="Menu">
+  <button class="icon-btn" data-close aria-label="Fechar menu" style="align-self:flex-end"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <a href="#loja" data-go="todos">Coleção</a>
+  <a href="#loja" data-go="capodarte">Capodarte</a>
+  <div class="msub"><a href="#loja" data-go="capodarte:bolsas">Bolsas</a><a href="#loja" data-go="capodarte:carteiras">Carteiras</a></div>
+  <a href="#loja" data-go="carmen">Carmen Steffens</a>
+  <div class="msub"><a href="#loja" data-go="carmen:bolsas">Bolsas</a><a href="#loja" data-go="carmen:carteiras">Carteiras</a><a href="#loja" data-go="carmen:calcados">Calçados</a></div>
+  <a href="#entrega">Entrega</a>
+  <a href="#sobre">A loja</a>
+  <span class="mono"></span>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="/loja/js/config.js"></script>
+<script src="/loja/js/utils.js"></script>
+<script src="/loja/js/state.js"></script>
+<script src="/loja/js/catalog.js"></script>
+<script src="/loja/js/cart.js"></script>
+<script src="/loja/js/ui.js"></script>
+<script src="/loja/js/checkout.js"></script>
+<script src="/loja/js/newsletter.js"></script>
+<script src="/loja/js/effects.js"></script>
+<script src="/loja/js/main.js"></script>
+
+</body>
+</html>

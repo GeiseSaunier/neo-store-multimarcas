@@ -1,0 +1,40 @@
+/* Neo Store · cores, fontes e utilitários */
+:root{
+  --sand:#EFE3DC; --linen:#F8F2EE; --paper:#FFFFFF; --ink:#73625A; --deep:#3E332D;
+  --stone:#B8A89D; --line:rgba(115,98,88,.22); --text:#4A3E37; --muted:#8A7A70;
+  --on-deep:#EFE3DC; --tint1:#EADBD1; --tint2:#F3E9E2; --ok:#5E7A5A; --err:#A0493B;
+  --serif:"Cormorant Garamond","Cormorant",Garamond,"Times New Roman",serif;
+  --sans:"Montserrat","Helvetica Neue",Arial,sans-serif;
+  --mono-img:url("/brand/mono.png");
+  --word-img:url("/brand/word.png");
+  --tile-img:url("/brand/tile.png");
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --sand:#2A221E; --linen:#221B18; --paper:#1B1513; --ink:#E6D3C7; --deep:#120E0C;
+    --stone:#8C7B70; --line:rgba(230,211,199,.18); --text:#EADCD2; --muted:#B3A094;
+    --on-deep:#EFE3DC; --tint1:#33291F; --tint2:#2C2420; color-scheme:dark; --glint-o:.35;
+  }
+}
+:root[data-theme="dark"]{
+  --sand:#2A221E; --linen:#221B18; --paper:#1B1513; --ink:#E6D3C7; --deep:#120E0C;
+  --stone:#8C7B70; --line:rgba(230,211,199,.18); --text:#EADCD2; --muted:#B3A094;
+  --on-deep:#EFE3DC; --tint1:#33291F; --tint2:#2C2420; color-scheme:dark; --glint-o:.35;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-behavior:smooth;scroll-padding-top:calc(env(safe-area-inset-top,0px) + 84px)}
+body{margin:0;background:var(--linen);color:var(--text);font-family:var(--sans);font-weight:400;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--linen)}
+img,svg{max-width:100%;display:block}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input,select{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.wrap{width:min(1240px,100% - 48px);margin-inline:auto}
+.mono{display:block;background:currentColor;-webkit-mask:var(--mono-img) center/contain no-repeat;mask:var(--mono-img) center/contain no-repeat;aspect-ratio:652/868}
+.word{display:block;background:currentColor;-webkit-mask:var(--word-img) center/contain no-repeat;mask:var(--word-img) center/contain no-repeat;aspect-ratio:3081/673}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

@@ -1,0 +1,34 @@
+/* ---------- produtos ---------- */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:18px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;text-decoration:none;display:flex;flex-direction:column;transition:border-color .2s,transform .2s}
+.pcard:hover{border-color:var(--line2);transform:translateY(-2px)}
+.pcard .img{aspect-ratio:4/5;background:var(--sand);position:relative}
+.pcard .img img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard .img .badge{position:absolute;top:10px;left:10px;background:#fff}
+.pcard .info{padding:14px 16px;display:grid;gap:2px}
+.pcard .info b{font-family:var(--serif);font-weight:500;font-size:19px;color:var(--ink);line-height:1.2}
+.pcard.off{opacity:.55}
+.pcard.add{align-items:center;justify-content:center;min-height:300px;border-style:dashed;color:var(--ink);gap:10px}
+.pcard.add svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:1.4}
+
+.form{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:start}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.photo{position:relative;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:var(--sand);border:1px solid var(--line)}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .cover{position:absolute;left:6px;top:6px;background:var(--deep);color:#fff;font-size:10px;padding:2px 8px;border-radius:999px}
+.photo .tools{position:absolute;inset:auto 6px 6px 6px;display:flex;justify-content:space-between}
+.photo .tools button{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:var(--deep)}
+.photo .tools svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.upload{aspect-ratio:4/5;border:1.5px dashed var(--line2);border-radius:10px;display:grid;place-items:center;text-align:center;color:var(--ink);font-size:12px;padding:10px;cursor:pointer;transition:background .2s}
+.upload:hover,.upload.drag{background:var(--tint)}
+.upload svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.4;margin:0 auto 6px;display:block}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid var(--line2);border-radius:8px;padding:6px;background:var(--panel)}
+.chips span{display:inline-flex;align-items:center;gap:6px;background:var(--tint);border-radius:999px;padding:4px 6px 4px 12px;font-size:13px}
+.chips span button{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.chips input{border:0;outline:none;flex:1;min-width:90px;padding:4px 6px;background:transparent}
+.colors{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.colors label{position:relative;width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);overflow:hidden;cursor:pointer}
+.colors label input{position:absolute;inset:-8px;width:52px;height:52px;border:0;padding:0;cursor:pointer}
+.colors .rm{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--deep);color:#fff;font-size:10px;line-height:16px;text-align:center;z-index:1}
+.colors .wrapc{position:relative}
+.savebar{position:sticky;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;margin-top:24px;background:linear-gradient(transparent,var(--bg) 30%)}

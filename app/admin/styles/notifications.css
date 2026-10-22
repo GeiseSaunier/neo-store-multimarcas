@@ -1,0 +1,16 @@
+/* ---------- notificações ---------- */
+.notif{position:absolute;right:0;top:48px;width:min(380px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 20px 50px rgba(40,30,25,.16);z-index:30;overflow:hidden}
+.notif .nh{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);font-weight:500}
+.notif .nh button{font-size:12px;color:var(--ink);text-decoration:underline}
+.notif ul{list-style:none;margin:0;padding:0;max-height:420px;overflow:auto}
+.notif li a{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 16px;border-bottom:1px solid var(--line);text-decoration:none}
+.notif li a:hover{background:#FCF9F7}
+.notif li .ic{grid-row:span 2;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:14px}
+.notif li .ic.ok{background:rgba(94,122,90,.14);color:var(--ok)}
+.notif li .ic.wait{background:rgba(183,121,58,.14);color:var(--wait)}
+.notif li small{color:var(--muted);font-size:12px}
+.notif .perm{padding:12px 16px;font-size:12px;color:var(--muted);display:flex;gap:10px;align-items:center;justify-content:space-between;background:var(--tint)}
+.toasts{position:fixed;right:20px;bottom:20px;display:grid;gap:10px;z-index:60}
+.toastx{background:var(--deep);color:#EFE3DC;border-radius:12px;padding:14px 18px;min-width:280px;box-shadow:0 16px 40px rgba(40,30,25,.25);animation:slide .35s cubic-bezier(.2,.7,.2,1);display:grid;gap:2px;text-decoration:none}
+.toastx b{font-weight:500}
+.toastx small{opacity:.75}

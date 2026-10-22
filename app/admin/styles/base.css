@@ -1,0 +1,17 @@
+/* ============ Painel Neo Store ============ */
+:root{
+  --bg:#F6F0EC; --panel:#FFFFFF; --sand:#EFE3DC; --tint:#F3E9E2; --ink:#73625A; --deep:#3E332D;
+  --text:#463B35; --muted:#8A7A70; --line:rgba(115,98,88,.18); --line2:rgba(115,98,88,.32);
+  --ok:#5E7A5A; --wait:#B7793A; --info:#56707F; --bad:#A0493B;
+  --serif:"Cormorant Garamond",Garamond,"Times New Roman",serif;
+  --sans:"Montserrat","Helvetica Neue",Arial,sans-serif;
+  --mono:url('/brand/mono.png');
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.mono{display:block;background:currentColor;-webkit-mask:var(--mono) center/contain no-repeat;mask:var(--mono) center/contain no-repeat;aspect-ratio:652/868}

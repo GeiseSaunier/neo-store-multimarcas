@@ -1,0 +1,31 @@
+/* Neo Store · faixa do topo, cabeçalho e menu */
+/* ---------- top strip & header ---------- */
+.strip{background:var(--ink);color:var(--linen);font-size:12px;letter-spacing:.06em;text-align:center;padding:8px 16px}
+header.site{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:color-mix(in srgb,var(--linen) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.hbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:76px}
+.brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);justify-self:start}
+.brand .mono{width:26px}
+.brand .word{width:132px}
+nav.main{display:flex;gap:4px;position:relative;padding:4px 0}
+nav.main a{text-decoration:none;font-size:13px;letter-spacing:.08em;color:var(--text);position:relative;z-index:1;padding:6px 16px;border-radius:999px;transition:color .35s ease}
+nav.main a.lit{color:var(--ink)}
+nav.main .nav-pill{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--tint1);border:1px solid var(--line);opacity:0;transition:transform .5s cubic-bezier(.2,.7,.2,1),width .5s cubic-bezier(.2,.7,.2,1),opacity .3s ease;pointer-events:none}
+.tools{display:flex;gap:6px;justify-self:end;align-items:center}
+.icon-btn{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;color:var(--ink);position:relative;transition:background .2s}
+.icon-btn:hover{background:var(--tint2)}
+.icon-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.4}
+.badge{position:absolute;top:4px;right:3px;min-width:18px;height:18px;border-radius:9px;background:var(--ink);color:var(--linen);font-size:10px;font-weight:600;display:grid;place-items:center;padding:0 5px;transform:scale(0);transition:transform .3s cubic-bezier(.3,1.6,.5,1)}
+.badge.on{transform:scale(1)}
+.badge.bump{animation:bump .45s}
+@keyframes bump{40%{transform:scale(1.45)}}
+.menu-btn{display:none}
+
+/* nav dropdown */
+nav.main .dd{position:relative;display:flex}
+nav.main .dd .menu{position:absolute;top:calc(100% + 12px);left:50%;transform:translate(-50%,6px);min-width:190px;background:var(--linen);border:1px solid var(--line);border-radius:14px;padding:8px;display:grid;opacity:0;pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.2,.7,.2,1);box-shadow:0 18px 40px rgba(62,51,45,.12);z-index:5}
+nav.main .dd .menu::before{content:"";position:absolute;left:0;right:0;top:-14px;height:14px}
+nav.main .dd:hover .menu,nav.main .dd:focus-within .menu{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+nav.main .dd .menu a{padding:9px 14px;border-radius:9px;font-size:13px;letter-spacing:.04em;color:var(--text);text-decoration:none}
+nav.main .dd .menu a:hover,nav.main .dd .menu a:focus-visible{background:var(--tint2);color:var(--ink)}
+.mnav .msub{display:flex;gap:8px;flex-wrap:wrap;padding:6px 0 14px;border-bottom:1px solid var(--line)}
+.mnav .msub a{font-family:var(--sans);font-size:14px;border:1px solid var(--line);border-radius:999px;padding:6px 14px;border-bottom:1px solid var(--line)}

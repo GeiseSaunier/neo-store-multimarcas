@@ -1,0 +1,23 @@
+/* ---------- estrutura ---------- */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+.side{background:var(--deep);color:#EFE3DC;padding:26px 18px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.side .brand{display:flex;align-items:center;gap:12px;padding:0 10px 26px;text-decoration:none}
+.side .brand .mono{width:26px;color:#EFE3DC}
+.side .brand b{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:.04em;line-height:1}
+.side .brand small{display:block;font-size:10px;letter-spacing:.24em;opacity:.7;margin-top:3px}
+.side nav{display:grid;gap:2px}
+.side nav a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;text-decoration:none;color:rgba(239,227,220,.78);transition:background .2s,color .2s}
+.side nav a svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.5;flex:none}
+.side nav a:hover{background:rgba(239,227,220,.08);color:#EFE3DC}
+.side nav a.on{background:#EFE3DC;color:var(--deep)}
+.side nav a .count{margin-left:auto;background:var(--wait);color:#fff;font-size:11px;border-radius:999px;padding:1px 8px}
+.side .foot{margin-top:auto;font-size:12px;color:rgba(239,227,220,.6);padding:0 10px;display:grid;gap:8px}
+.side .foot a,.side .foot button{color:rgba(239,227,220,.85);text-align:left;text-decoration:underline}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:16px 36px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:20}
+.topbar .menu-btn{display:none;margin-right:auto}
+.page{padding:34px 36px 70px;max-width:1280px;width:100%}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px}
+.page-head h1{font-family:var(--serif);font-weight:400;font-size:44px;line-height:1;color:var(--ink);margin:0}
+.page-head p{margin:8px 0 0;color:var(--muted)}

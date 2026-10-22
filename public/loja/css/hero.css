@@ -1,0 +1,34 @@
+/* Neo Store · abertura com o monograma */
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;background:var(--sand)}
+.hero .wrap{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;min-height:min(820px,calc(100svh - 110px));gap:40px;padding-block:56px}
+.hero h1{font-family:var(--serif);font-weight:300;font-size:clamp(46px,6.6vw,96px);line-height:.98;letter-spacing:-.01em;color:var(--ink);margin:0 0 28px}
+.hero h1 em{font-style:italic;font-weight:300}
+.hero p.lead{font-size:16px;max-width:30em;color:var(--text);margin:0 0 38px;line-height:1.75}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 30px;border-radius:999px;font-size:13px;letter-spacing:.1em;font-weight:500;text-decoration:none;transition:background .25s,color .25s,transform .2s,border-color .25s}
+.btn:active{transform:scale(.97)}
+.btn.solid{background:var(--ink);color:var(--linen)}
+.btn.solid:hover{background:var(--deep);color:var(--on-deep)}
+.btn.ghost{border:1px solid var(--ink);color:var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:var(--linen)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.hero-stats{display:flex;gap:36px;margin-top:56px;padding-top:26px;border-top:1px solid var(--line);max-width:460px}
+.hero-stats div{font-size:12px;color:var(--muted);line-height:1.45}
+.hero-stats strong{display:block;font-family:var(--serif);font-weight:400;font-size:30px;color:var(--ink);line-height:1.1}
+
+.stage{position:relative;aspect-ratio:1;width:min(100%,560px);justify-self:center;perspective:1000px}
+.stage .ring{position:absolute;inset:0;color:var(--ink);animation:spin 60s linear infinite}
+.stage .ring text{font-family:var(--sans);font-size:15px;letter-spacing:.62em;fill:currentColor;font-weight:400}
+@keyframes spin{to{transform:rotate(360deg)}}
+.stage .disc{position:absolute;inset:13%;border-radius:50%;border:1px solid var(--line)}
+.stage .tilt{position:absolute;inset:0;display:grid;place-items:center;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.stage .tilt .mono{width:34%;color:var(--ink);filter:drop-shadow(0 30px 30px rgba(62,51,45,.18));animation:reveal 1.6s cubic-bezier(.7,0,.2,1) .15s both}
+@keyframes reveal{from{clip-path:polygon(0 0,0 0,0 0);opacity:.2}to{clip-path:polygon(0 0,250% 0,0 250%);opacity:1}}
+.stage .glint{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at var(--gx,40%) var(--gy,35%),rgba(255,255,255,.55),transparent 42%);mix-blend-mode:soft-light;pointer-events:none;opacity:var(--glint-o,1)}
+.hero .pattern{position:absolute;inset:0;opacity:.07;background:var(--ink);pointer-events:none;-webkit-mask:var(--tile-img) 0 0/90px 100px repeat;mask:var(--tile-img) 0 0/90px 100px repeat;-webkit-mask-image:linear-gradient(90deg,#000,transparent 60%),var(--tile-img);-webkit-mask-composite:source-in;mask-image:linear-gradient(90deg,#000,transparent 60%),var(--tile-img);mask-composite:intersect;-webkit-mask-size:100% 100%,90px 100px;mask-size:100% 100%,90px 100px;-webkit-mask-repeat:no-repeat,repeat;mask-repeat:no-repeat,repeat}
+.hero-copy{position:relative;z-index:1}
+.hero-copy>*{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.hero-copy>*:nth-child(2){animation-delay:.12s}.hero-copy>*:nth-child(3){animation-delay:.24s}.hero-copy>*:nth-child(4){animation-delay:.36s}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}}
