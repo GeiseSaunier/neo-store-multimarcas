@@ -44,7 +44,11 @@ Em **Authentication > URL Configuration**, coloque o endereço do site em **Site
 
 ---
 
-## 2. Mercado Pago: PIX, cartão e boleto
+## 2. Pagamentos: PIX direto, cartão e boleto (Mercado Pago)
+
+**PIX direto na conta da loja.** O PIX não passa pelo Mercado Pago: o checkout gera o QR Code e o copia e cola com a chave da loja (CNPJ 32.315.010/0001-02, Vanessa Neo Gomes · Nubank), o valor exato e um identificador (`NEO` + número do pedido). A confirmação é **manual**: quando o PIX cair na Nubank (a cliente também manda o comprovante pelo WhatsApp), abra o pedido no painel e use **Marcar como pago**. A cliente recebe o e-mail e a tela dela muda sozinha. A chave e os dados ficam em `PIX` (`lib/config.js` e `public/loja/js/config.js`); com `direct: false` o PIX volta a ser pelo Mercado Pago, com confirmação automática.
+
+**Cartão e boleto** continuam pelo Mercado Pago:
 
 1. Entre na sua conta Mercado Pago (conta de vendedor) e acesse **Suas integrações** em mercadopago.com.br/developers.
 2. Crie uma aplicação do tipo **Pagamentos online**.
@@ -145,6 +149,7 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 - **Fotos:** ao excluir uma peça ou remover uma foto, o arquivo é apagado do Supabase na rotina diária, depois de 24 h, e só se nenhuma peça e nenhum pedido usar aquela foto (pedidos antigos continuam com as miniaturas).
 - **Peça esgotada:** coloque estoque 0. Com estoque preenchido, as peças ficam reservadas assim que o pedido é feito e voltam ao estoque se o pedido for cancelado ou o pagamento não for concluído no prazo (PIX: 30 min; cartão: 48 h; boleto: 5 dias).
 - **Calçados e peças com tamanhos:** o estoque é preenchido por tamanho na tela da peça.
+- **PIX direto:** o QR vale 1 hora; o pedido só é cancelado sozinho 1 hora depois de vencer. Se o PIX cair depois do cancelamento, ainda dá para usar **Marcar como pago** no pedido cancelado (se a peça já tiver sido vendida, aparece o alerta de estoque).
 - **Pedido novo:** aparece com som e aviso no canto da tela. Para receber aviso mesmo com o painel em outra aba, clique no sininho e em **Ativar**.
 - **Entregas regionais e cupons:** edite em Painel > Entregas e Painel > Cupons. Os valores de entrega aparecem sozinhos na página da loja e na sacola.
 - **Cupom de boas-vindas:** marque **Só na primeira compra** para o cupom valer uma única vez por CPF (o BEMVINDA já vem assim). O cadastro de novidades só cita o BEMVINDA enquanto ele estiver ativo.
@@ -207,6 +212,7 @@ neo-store/
 │   ├── api.js                       Respostas padrão das rotas
 │   ├── admin.js                     Confere se quem chamou é administrador
 │   ├── orders.js                    Expiração de pedidos e mensagens de estoque
+│   ├── pix.js                       Código PIX copia e cola (BR Code do Banco Central)
 │   ├── photos.js                    Limpeza segura das fotos sem uso no Storage
 │   ├── ratelimit.js                 Limite de tentativas por IP (no banco, função rate_hit)
 │   ├── csv.js                       Exportação de planilhas

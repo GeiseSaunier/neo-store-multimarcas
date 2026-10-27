@@ -7,7 +7,7 @@ export async function GET(_req, { params }) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return fail('Pedido não encontrado.', 404);
   const { data } = await supabaseAdmin().from('orders')
-    .select('id,code,status,total,payment_method,pix_qr,pix_qr_base64,pix_expires_at,shipping_label,customer_name,email,tracking_code')
+    .select('id,code,status,total,payment_method,pix_direct,pix_qr,pix_qr_base64,pix_expires_at,shipping_label,customer_name,email,tracking_code')
     .eq('id', id).maybeSingle();
   if (!data) return fail('Pedido não encontrado.', 404);
   const { customer_name, ...rest } = data;

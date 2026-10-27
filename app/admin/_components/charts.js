@@ -11,7 +11,8 @@ export function Delta({ now, before, className = '' }) {
 
 export function DailyChart({ days }) {
   const W = 720, H = 220, P = { l: 44, r: 8, t: 12, b: 26 };
-  const max = Math.max(1, ...days.map((d) => d.v));
+  // mínimo de R$ 100 no eixo: sem vendas, as marcas ficam 0, 50 e 100 (e não "1" repetido)
+  const max = Math.max(100, ...days.map((d) => d.v));
   const nice = Math.pow(10, Math.floor(Math.log10(max)));
   const top = Math.ceil(max / nice) * nice;
   const bw = (W - P.l - P.r) / days.length;

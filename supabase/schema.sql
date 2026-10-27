@@ -153,6 +153,8 @@ update public.orders set stock_reserved = true where status in ('paid','shipped'
 -- Peças que faltaram quando um pagamento chegou depois de a peça ter sido vendida para outra cliente.
 -- Aparece como alerta no painel; vazio = tudo certo.
 alter table public.orders add column if not exists stock_issue text;
+-- PIX direto na conta da loja (chave própria): a confirmação do pagamento é manual no painel.
+alter table public.orders add column if not exists pix_direct boolean not null default false;
 
 -- Com estoque por tamanho, a coluna stock guarda a soma (para "Esgotado" e para o painel).
 create or replace function public.products_sum_stock() returns trigger language plpgsql as $$

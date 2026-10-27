@@ -81,6 +81,11 @@
 .pix .qr{background:#fff;padding:12px;border-radius:8px;border:1px solid var(--line)}
 .pix .qr svg{width:100%;height:auto}
 .pix .code{font-size:11px;word-break:break-all;background:var(--paper);border:1px dashed var(--line);padding:10px;border-radius:6px;color:var(--muted);margin:10px 0}
+/* PIX direto: titular da conta que recebe */
+.pix-to{display:grid;gap:2px;margin-top:14px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}
+.pix-to b{color:var(--ink);font-weight:500}
+.pix-to small{color:var(--muted);font-size:12px}
+.pix .btn{width:100%}
 .timer{font-family:var(--serif);font-size:30px;color:var(--ink);line-height:1}
 .boleto-bars{height:56px;margin:14px 0;background:repeating-linear-gradient(90deg,var(--text) 0 2px,transparent 2px 4px,var(--text) 4px 5px,transparent 5px 8px,var(--text) 8px 11px,transparent 11px 12px)}
 .ship-opts{display:grid;gap:10px;margin-top:6px}

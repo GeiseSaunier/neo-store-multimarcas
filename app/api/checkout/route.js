@@ -4,7 +4,9 @@ import { quoteCorreios } from '@/lib/shipping';
 import { notifyNewOrder, notifyOrderCreated, notifyError } from '@/lib/email';
 import { json, fail, siteUrl } from '@/lib/api';
 import { onlyDigits, round2, validCpf } from '@/lib/format';
-import { STORE } from '@/lib/config';
+import { STORE, PIX } from '@/lib/config';
+import { pixPayload } from '@/lib/pix';
+import QRCode from 'qrcode';
 import { tooMany } from '@/lib/ratelimit';
 import { expireStaleOrders, stockMessage, stockText } from '@/lib/orders';
 export const dynamic = 'force-dynamic';
@@ -122,11 +124,20 @@ export async function POST(req) {
       throw re;
     }
 
-    // ---------- cria o pagamento no Mercado Pago ----------
+    // ---------- cria o pagamento (PIX direto na conta da loja, ou Mercado Pago) ----------
     const url = siteUrl(req);
-    let result;
+    let result, saved = order;
     try {
-      if (payment === 'pix') {
+      if (payment === 'pix' && PIX.direct) {
+        // QR e copia e cola com a chave da loja; o "NEO1001" ajuda a achar o pagamento no extrato.
+        const qr = pixPayload({ key: PIX.key, name: PIX.name, city: PIX.city, amount: total, txid: `NEO${order.code}` });
+        const qrBase64 = (await QRCode.toDataURL(qr, { margin: 1, width: 360 })).split(',')[1];
+        const expiresAt = new Date(Date.now() + STORE.pixMinutes * 60e3).toISOString();
+        const upd = { pix_direct: true, pix_qr: qr, pix_qr_base64: qrBase64, pix_expires_at: expiresAt };
+        await db.from('orders').update(upd).eq('id', order.id);
+        saved = { ...order, ...upd };
+        result = { payment: 'pix', direct: true, qr, qrBase64, expiresAt };
+      } else if (payment === 'pix') {
         const pay = await createPixPayment({ order, siteUrl: url, minutes: STORE.pixMinutes });
         const td = pay.point_of_interaction?.transaction_data || {};
         const upd = { mp_payment_id: String(pay.id), mp_status: pay.status, pix_qr: td.qr_code, pix_qr_base64: td.qr_code_base64, pix_expires_at: pay.date_of_expiration };
@@ -138,12 +149,12 @@ export async function POST(req) {
         result = { payment, redirect: pref.init_point };
       }
     } catch (e) {
-      await notifyError('checkout: Mercado Pago não gerou o pagamento', e, `Pedido #${order.code} foi cancelado automaticamente.`);
+      await notifyError('checkout: não foi possível gerar o pagamento', e, `Pedido #${order.code} foi cancelado automaticamente.`);
       await db.from('orders').update({ status: 'cancelled', notes: `Falha ao gerar pagamento: ${e.message}` }).eq('id', order.id);
       return fail('Não conseguimos gerar o pagamento agora. Tente novamente em instantes ou fale com a gente pelo WhatsApp.', 502);
     }
 
-    await Promise.all([notifyNewOrder(order, lines), notifyOrderCreated(order, lines, url)]);
+    await Promise.all([notifyNewOrder(saved, lines), notifyOrderCreated(saved, lines, url)]);
     return json({ orderId: order.id, code: order.code, total, ...result });
   } catch (e) {
     await notifyError('checkout: erro ao finalizar pedido', e);

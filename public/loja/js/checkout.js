@@ -43,7 +43,9 @@ function renderCo(){
     <button class="pay-tab" data-pay="pix" aria-pressed="${co.pay==='pix'}"><svg viewBox="0 0 24 24"><path d="M12 3 21 12 12 21 3 12Z"/><path d="M8 12l4-4 4 4-4 4z"/></svg>PIX<small>5% de desconto</small></button>
     <button class="pay-tab" data-pay="card" aria-pressed="${co.pay==='card'}"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>Cartão<small>até 3x sem juros</small></button>
     <button class="pay-tab" data-pay="boleto" aria-pressed="${co.pay==='boleto'}"><svg viewBox="0 0 24 24"><path d="M4 6v12M7 6v12M9 6v12M12 6v12M15 6v12M17 6v12M20 6v12"/></svg>Boleto<small>compensa em até 2 dias</small></button></div>`;
-   if(co.pay==='pix')body+=`<p style="margin:0">Ao confirmar, geramos o QR Code PIX de <b>${brl(t.total)}</b>, válido por 30 minutos. A confirmação do pagamento é automática.</p>`;
+   if(co.pay==='pix')body+=PIX.direct
+     ?`<p style="margin:0">Ao confirmar, geramos o QR Code PIX de <b>${brl(t.total)}</b>, válido por 1 hora, para a conta da loja (${esc(PIX.name)} · ${esc(PIX.bank)}). Depois de pagar, envie o comprovante pelo WhatsApp: confirmamos assim que o pagamento aparecer na nossa conta.</p>`
+     :`<p style="margin:0">Ao confirmar, geramos o QR Code PIX de <b>${brl(t.total)}</b>, válido por 1 hora. A confirmação do pagamento é automática.</p>`;
    if(co.pay==='card')body+=`<p style="margin:0">Você vai para o ambiente seguro do <b>Mercado Pago</b> para digitar os dados do cartão${n>1?` e parcelar em até <b>${n}x de ${brl(t.total/n)}</b> sem juros`:''}. Os dados do cartão não passam pelo nosso site.</p>`;
    if(co.pay==='boleto')body+=`<p style="margin:0">Você vai para o ambiente seguro do <b>Mercado Pago</b> para gerar o boleto de <b>${brl(t.total)}</b>. A compensação leva até 2 dias úteis.</p>`;
    if(t.shipTbd)body+=`<p class="hint" style="margin-top:12px">O valor da entrega escolhida é combinado pelo WhatsApp e não está incluído neste total.</p>`;
@@ -105,6 +107,10 @@ async function nextStep(){
   }catch(e){co.err=e.message;btn.disabled=false;renderCo()}
 }
 let pixI,pollI;
+/* PIX direto: para quem a cliente está pagando e o botão do comprovante pelo WhatsApp. */
+function pixDirectHTML(o){const msg=`Olá! Fiz o PIX do pedido #${o.code} (${brl(o.total)}). Segue o comprovante.`;
+  return`<div class="pix-to"><span class="opt-label">Você está pagando para</span><b>${esc(PIX.name)}</b><small>${esc(PIX.bank)} · chave ${esc(PIX.keyType)} ${esc(PIX.keyLabel)}</small></div>
+  <a class="btn solid" style="height:42px;margin-top:10px" href="${WA}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar comprovante pelo WhatsApp</a>`}
 function renderPix(){const o=co.order;
   $('#cBox').innerHTML=`${ICON_X}<div class="finish" style="padding-top:50px">
   <h2 style="font-size:38px">Pedido #${o.code} criado</h2><p>Pague <b style="color:var(--ink)">${brl(o.total)}</b> com PIX para confirmar.</p>
@@ -113,10 +119,11 @@ function renderPix(){const o=co.order;
     <div><div class="opt-label">Pague em até</div><div class="timer" id="pixT">--:--</div>
     <p class="hint" style="margin:10px 0 0">Abra o app do seu banco, escolha pagar com PIX e escaneie o código ou use o copia e cola.</p>
     <div class="code" id="pixCode">${esc(o.qr||'')}</div><button class="btn ghost" id="copyPix" style="height:42px">Copiar código PIX</button>
-    <p class="hint" id="pixWait" style="margin:14px 0 0;max-width:none;text-align:left">Aguardando a confirmação do pagamento…</p></div></div></div>`;
+    ${o.direct?pixDirectHTML(o):''}
+    <p class="hint" id="pixWait" style="margin:14px 0 0;max-width:none;text-align:left">${o.direct?'Aguardando o pagamento. Esta tela muda sozinha quando confirmarmos.':'Aguardando a confirmação do pagamento…'}</p></div></div></div>`;
   bindCo();
   clearInterval(pixI);const end=new Date(o.expiresAt).getTime();
-  const tick=()=>{const s=Math.max(0,Math.round((end-Date.now())/1000));const el=$('#pixT');if(!el){clearInterval(pixI);return}el.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;if(!s){clearInterval(pixI);$('#pixWait').textContent='O código expirou. Faça o pedido novamente ou fale com a gente no WhatsApp.'}};tick();pixI=setInterval(tick,1000);
+  const tick=()=>{const s=Math.max(0,Math.round((end-Date.now())/1000));const el=$('#pixT');if(!el){clearInterval(pixI);return}el.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;if(!s){clearInterval(pixI);$('#pixWait').textContent=o.direct?'O prazo do QR Code terminou. Se você já pagou, envie o comprovante pelo WhatsApp que confirmamos o pedido.':'O código expirou. Faça o pedido novamente ou fale com a gente no WhatsApp.'}};tick();pixI=setInterval(tick,1000);
   clearInterval(pollI);pollI=setInterval(async()=>{if(!$('#pixT')){clearInterval(pollI);return}try{const r=await fetch('/api/orders/'+o.orderId);const j=await r.json();if(['paid','shipped','delivered'].includes(j.status)){clearInterval(pollI);co.step='done';renderCo()}}catch(e){}},5000);
 }
 function renderDone(){clearInterval(pixI);clearInterval(pollI);clearPaidCart();const o=co.order;const first=(co.data.nome||'').split(' ')[0];

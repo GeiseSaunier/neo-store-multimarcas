@@ -3,7 +3,7 @@ import './pedido.css';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { brl } from '@/lib/format';
-import { STORE } from '@/lib/config';
+import { STORE, PIX } from '@/lib/config';
 
 // A loja guarda a sacola até o pagamento ser confirmado; ao voltar do Mercado Pago com o pedido pago, esvazia.
 function clearCart(id) {
@@ -63,6 +63,11 @@ export default function OrderStatus() {
                 <div className="qr">{o.pix_qr_base64 && <img src={`data:image/png;base64,${o.pix_qr_base64}`} alt="QR Code PIX" />}</div>
                 <div className="code">{o.pix_qr}</div>
                 <button className="btn ghost" onClick={() => navigator.clipboard?.writeText(o.pix_qr).then(() => setCopied(true))}>{copied ? 'Código copiado' : 'Copiar código PIX'}</button>
+                {o.pix_direct && (<>
+                  <p className="to">Você está pagando para <b>{PIX.name}</b><br />{PIX.bank} · chave {PIX.keyType} {PIX.keyLabel}</p>
+                  <p>Depois de pagar, envie o comprovante pelo WhatsApp. Confirmamos assim que o pagamento aparecer na nossa conta.</p>
+                  <a className="btn solid" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Olá! Fiz o PIX do pedido #${o.code} (${brl(o.total)}). Segue o comprovante.`)}`} target="_blank" rel="noopener">Enviar comprovante pelo WhatsApp</a>
+                </>)}
               </>) : <p>{o.payment_method === 'boleto' ? 'Assim que o boleto for compensado (até 2 dias úteis), confirmamos por e-mail.' : 'Estamos aguardando a confirmação do Mercado Pago. Isso costuma levar poucos instantes.'}</p>}
               <p style={{ marginTop: 16, fontSize: 13 }}>Esta página se atualiza sozinha.</p>
             </>)}

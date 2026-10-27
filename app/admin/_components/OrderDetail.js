@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../_ctx';
 import { brl, fmtDateTime, onlyDigits } from '@/lib/format';
-import { STATUS, PAYMENT_LABEL, SUBS, NEXT_STATUS, brandName } from '@/lib/config';
+import { STATUS, PAYMENT_LABEL, SUBS, NEXT_STATUS, PIX, brandName } from '@/lib/config';
 
 const fmtPhone = (v) => { const d = onlyDigits(v); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : v; };
 
@@ -92,9 +92,16 @@ export default function OrderDetail({ order, onClose, onSaved }) {
           </section>
           <section>
             <h3>Pagamento</h3>
-            <div className="kv"><span>Forma</span><span>{PAYMENT_LABEL[order.payment_method]}</span>
-              <span>Mercado Pago</span><span>{order.mp_payment_id ? `#${order.mp_payment_id} · ${order.mp_status || ''}` : 'aguardando'}</span>
+            <div className="kv"><span>Forma</span><span>{order.pix_direct ? `PIX direto (${PIX.bank})` : PAYMENT_LABEL[order.payment_method]}</span>
+              {order.pix_direct
+                ? <><span>Identificador</span><span>NEO{order.code}</span></>
+                : <><span>Mercado Pago</span><span>{order.mp_payment_id ? `#${order.mp_payment_id} · ${order.mp_status || ''}` : 'aguardando'}</span></>}
               {order.paid_at && <><span>Pago em</span><span>{fmtDateTime(order.paid_at)}</span></>}</div>
+            {order.pix_direct && ['pending', 'cancelled'].includes(order.status) && (
+              <p className="muted" style={{ fontSize: 12, margin: '10px 0 0' }}>
+                Confira no app da {PIX.bank} se entrou {brl(order.total)} (identificador NEO{order.code}, ou pelo comprovante que a cliente mandar no WhatsApp) e use <b>Marcar como pago</b>.
+              </p>
+            )}
           </section>
           <section>
             <h3>Acompanhamento</h3>

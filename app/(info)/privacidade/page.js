@@ -1,4 +1,4 @@
-import { LEGAL, STORE } from '@/lib/config';
+import { LEGAL, STORE, PIX } from '@/lib/config';
 
 export const metadata = { title: 'Política de privacidade · Neo Store Multimarcas' };
 
@@ -29,7 +29,8 @@ export default function Privacidade() {
       <h2>Com quem compartilhamos</h2>
       <p>Somente com os serviços necessários para a loja funcionar:</p>
       <ul>
-        <li><b>Mercado Pago:</b> processamento dos pagamentos.</li>
+        <li><b>Mercado Pago:</b> processamento dos pagamentos com cartão e boleto.</li>
+        {PIX.direct && <li><b>{PIX.bank}:</b> recebimento dos pagamentos via PIX, na conta da loja.</li>}
         <li><b>Correios / Melhor Envio</b> e transportadoras regionais: cálculo do frete e entrega.</li>
         <li><b>Supabase</b> (banco de dados), <b>Vercel</b> (hospedagem) e <b>Resend</b> (envio de e-mails): infraestrutura do site.</li>
       </ul>

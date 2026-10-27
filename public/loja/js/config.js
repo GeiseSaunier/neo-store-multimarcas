@@ -8,8 +8,10 @@ const SHORTCUTS=['calcados','roupas'];
 const WA='https://wa.me/5592984848096', WA_LABEL='(92) 98484-8096';
 /* Cupom citado no cadastro de novidades (só aparece se estiver ativo no painel). */
 const WELCOME_COUPON='BEMVINDA';
-/* Dados da empresa no rodapé. PREENCHER e manter igual a LEGAL em lib/config.js. */
-const LEGAL={company:'[RAZÃO SOCIAL DA EMPRESA]',cnpj:'[00.000.000/0000-00]',address:'[Rua, número, bairro, Parintins/AM, CEP]',email:'contato@neostore.com.br',instagram:'https://www.instagram.com/[usuario]'};
+/* PIX direto na conta da loja (confirmação manual). Manter igual a PIX em lib/config.js. */
+const PIX={direct:true,keyLabel:'32.315.010/0001-02',keyType:'CNPJ',name:'Vanessa Neo Gomes',bank:'Nubank'};
+/* Dados da empresa no rodapé. Manter igual a LEGAL em lib/config.js. */
+const LEGAL={company:'Neo Store Multimarcas',cnpj:'32.315.010/0001-02',address:'[Rua, número, bairro, Parintins/AM, CEP]',email:'contato@neostore.com.br',instagram:'https://www.instagram.com/[usuario]'};
 const menuBrands=()=>Object.entries(BRANDS).filter(([,b])=>b.menu!==false);
 const brandOf=p=>p.b==='outras'&&p.bl?p.bl:BRANDS[p.b].n;
 const label=p=>`${brandOf(p)} · ${SUBS[p.c]}`;
