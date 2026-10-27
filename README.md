@@ -140,6 +140,7 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 ## Uso do dia a dia
 
 - **Cadastrar peça:** Painel > Produtos > Nova peça. Fotos tiradas no celular são reduzidas automaticamente.
+- **Roupas e marcas avulsas:** escolha a marca **Outras marcas** e digite o nome da marca da peça. Ela aparece na loja pelo atalho **Roupas** do menu. Peças de qualquer marca aparecem também nos atalhos **Calçados** e **Roupas**.
 - **Tirar uma peça da loja sem apagar:** desligue **Mostrar na loja**.
 - **Fotos:** ao excluir uma peça ou remover uma foto, o arquivo é apagado do Supabase na rotina diária, depois de 24 h, e só se nenhuma peça e nenhum pedido usar aquela foto (pedidos antigos continuam com as miniaturas).
 - **Peça esgotada:** coloque estoque 0. Com estoque preenchido, as peças ficam reservadas assim que o pedido é feito e voltam ao estoque se o pedido for cancelado ou o pagamento não for concluído no prazo (PIX: 30 min; cartão: 48 h; boleto: 5 dias).
@@ -244,7 +245,8 @@ neo-store/
 
 | Quero… | Arquivo |
 |---|---|
-| Adicionar uma marca ou subcategoria | `lib/config.js`, `public/loja/js/config.js` e o `check` de `brand`/`category` em `supabase/schema.sql` |
+| Adicionar uma marca ou subcategoria | `BRANDS`/`SUBS` em `lib/config.js` e em `public/loja/js/config.js`, e as regras `products_brand_check`/`products_category_check` em `supabase/schema.sql`. Os menus da loja (topo, celular e rodapé) se montam sozinhos |
+| Mudar os atalhos de categoria do menu (Calçados, Roupas) | `SHORTCUTS` em `public/loja/js/config.js` |
 | Mudar desconto do PIX ou número de parcelas | `lib/config.js` (servidor) e os textos em `public/loja.html` / `public/loja/js/checkout.js` |
 | Trocar o WhatsApp da loja | `lib/config.js` e `public/loja/js/config.js` |
 | Mudar cores ou fontes da loja | `public/loja/css/base.css` |

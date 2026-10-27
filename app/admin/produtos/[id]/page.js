@@ -7,8 +7,8 @@ import { BRANDS, SUBS } from '@/lib/config';
 import { shrink } from '@/lib/image';
 import Chips from '../../_components/Chips';
 
-const EMPTY = { name: '', brand: 'capodarte', category: 'bolsas', price: '', old_price: '', description: '', details: '', sizes: ['Único'], colors: [], images: [], stock: '', size_stock: {}, active: true, position: 0 };
-const SIZE_PRESETS = [['Único', ['Único']], ['33 ao 39', ['33', '34', '35', '36', '37', '38', '39']], ['PP ao GG', ['PP', 'P', 'M', 'G', 'GG']]];
+const EMPTY = { name: '', brand: 'capodarte', category: 'bolsas', price: '', old_price: '', description: '', details: '', sizes: ['Único'], colors: [], images: [], stock: '', size_stock: {}, brand_label: '', active: true, position: 0 };
+const SIZE_PRESETS = [['Único', ['Único']], ['33 ao 39', ['33', '34', '35', '36', '37', '38', '39']], ['PP ao GG', ['PP', 'P', 'M', 'G', 'GG']], ['36 ao 46', ['36', '38', '40', '42', '44', '46']]];
 
 // Linha do banco → campos do formulário.
 const toForm = (data) => ({
@@ -68,6 +68,7 @@ export default function ProductForm() {
     const price = Number(String(f.price).replace(',', '.'));
     const old = f.old_price === '' ? null : Number(String(f.old_price).replace(',', '.'));
     if (!f.name.trim()) return setMsg({ t: 'Dê um nome para a peça.' });
+    if (f.brand === 'outras' && !String(f.brand_label || '').trim()) return setMsg({ t: 'Informe o nome da marca da peça.' });
     if (!(price > 0)) return setMsg({ t: 'Informe o preço da peça.' });
     if (old !== null && !(old > price)) return setMsg({ t: 'O preço “de” precisa ser maior que o preço atual. Deixe vazio se a peça não estiver em promoção.' });
     if (!f.images.length) return setMsg({ t: 'Envie pelo menos uma foto.' });
@@ -77,7 +78,7 @@ export default function ProductForm() {
     const multi = sizes.length > 1;
     const bySize = multi && sizes.some((s) => String(f.size_stock[s] ?? '').trim() !== '');
     const row = {
-      name: f.name.trim(), brand: f.brand, category: f.category, price, old_price: old,
+      name: f.name.trim(), brand: f.brand, brand_label: f.brand === 'outras' ? String(f.brand_label).trim() : null, category: f.category, price, old_price: old,
       description: f.description.trim(), details: f.details.split('\n').map((s) => s.trim()).filter(Boolean),
       sizes, colors: f.colors, images: f.images,
       size_stock: bySize ? Object.fromEntries(sizes.map((s) => [s, Math.max(0, parseInt(f.size_stock[s], 10) || 0)])) : null,
@@ -158,7 +159,7 @@ export default function ProductForm() {
             <label>Tamanhos disponíveis</label>
             <Chips value={f.sizes} onChange={set('sizes')} placeholder="Digite e aperte Enter" />
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{SIZE_PRESETS.map(([l, v]) => <button type="button" key={l} className="btn small ghost" onClick={() => setF((s) => ({ ...s, sizes: v }))}>{l}</button>)}</div>
-            <span className="help">Para bolsas e carteiras, deixe “Único”.</span>
+            <span className="help">Para bolsas e carteiras, deixe “Único”. Para roupas, use PP ao GG ou 36 ao 46.</span>
           </div>
           <div className="field">
             <label>Cores</label>
@@ -204,6 +205,10 @@ export default function ProductForm() {
             <div className="field"><label htmlFor="ct">Categoria</label>
               <select id="ct" value={f.category} onChange={set('category')}>{subs.map((s) => <option key={s} value={s}>{SUBS[s]}</option>)}</select></div>
           </div>
+          {f.brand === 'outras' && (
+            <div className="field"><label htmlFor="bl">Nome da marca</label><input id="bl" value={f.brand_label || ''} onChange={set('brand_label')} placeholder="Ex.: Lança Perfume" />
+              <span className="help">Aparece na loja no lugar de “Outras marcas”. A peça entra na vitrine pelo atalho da categoria (ex.: Roupas).</span></div>
+          )}
           <div className="row">
             <div className="field"><label htmlFor="pr">Preço (R$)</label><input id="pr" inputMode="decimal" value={f.price} onChange={set('price')} placeholder="690,00" /></div>
             <div className="field"><label htmlFor="op">Preço “de” (opcional)</label><input id="op" inputMode="decimal" value={f.old_price} onChange={set('old_price')} placeholder="Só se estiver em promoção" /></div>

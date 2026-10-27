@@ -22,6 +22,6 @@ $('#themeBtn').onclick=()=>{const r=document.documentElement;const dark=r.datase
   nav.querySelectorAll('.menu a').forEach(a=>a.addEventListener('click',()=>{active=a.closest('.dd').querySelector(':scope > a');place(active);a.blur()}));
   const loja=$('#loja'),sobre=$('#sobre');
   function spy(){if(nav.matches(':hover'))return;const y=innerHeight*.4;const inS=el=>{const r=el.getBoundingClientRect();return r.top<y&&r.bottom>y};
-    let a=null;if(inS(sobre))a=links.find(l=>l.getAttribute('href')==='#sobre');else if(inS(loja))a=links.find(l=>l.dataset.go===filter.split(':')[0])||null;
+    let a=null;if(inS(sobre))a=links.find(l=>l.getAttribute('href')==='#sobre');else if(inS(loja))a=links.find(l=>l.dataset.go===filter)||links.find(l=>l.dataset.go===filter.split(':')[0])||null;
     if(a!==active){active=a;place(a)}}
   addEventListener('scroll',spy,{passive:true});addEventListener('resize',()=>place(active));window.navSpy=spy;})();

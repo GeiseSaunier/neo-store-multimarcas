@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../_ctx';
 import { brl, fmtDateTime, onlyDigits } from '@/lib/format';
-import { STATUS, PAYMENT_LABEL, BRANDS, SUBS, NEXT_STATUS } from '@/lib/config';
+import { STATUS, PAYMENT_LABEL, SUBS, NEXT_STATUS, brandName } from '@/lib/config';
 
 const fmtPhone = (v) => { const d = onlyDigits(v); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : v; };
 
@@ -68,7 +68,7 @@ export default function OrderDetail({ order, onClose, onSaved }) {
             {(order.order_items || []).map((i) => (
               <div className="line-item" key={i.id}>
                 {i.image ? <img className="thumb" src={i.image} alt="" /> : <span className="thumb" />}
-                <div><b style={{ fontWeight: 500 }}>{i.qty}× {i.name}</b><div className="muted">{BRANDS[i.brand]?.name} · {SUBS[i.category]}{i.size && i.size !== 'Único' ? ` · Tam. ${i.size}` : ''}{i.color ? <> · <i style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: i.color, border: '1px solid var(--line2)', verticalAlign: -1 }} /></> : null}</div></div>
+                <div><b style={{ fontWeight: 500 }}>{i.qty}× {i.name}</b><div className="muted">{brandName(i.brand, i.brand_label)} · {SUBS[i.category]}{i.size && i.size !== 'Único' ? ` · Tam. ${i.size}` : ''}{i.color ? <> · <i style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: i.color, border: '1px solid var(--line2)', verticalAlign: -1 }} /></> : null}</div></div>
                 <span>{brl(i.unit_price * i.qty)}</span>
               </div>
             ))}

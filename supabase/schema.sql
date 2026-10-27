@@ -22,8 +22,8 @@ grant execute on function public.is_admin() to anon, authenticated;
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(),
   name text not null,
-  brand text not null check (brand in ('capodarte','carmen')),
-  category text not null check (category in ('bolsas','carteiras','calcados')),
+  brand text not null,                -- regras logo abaixo (products_brand_check)
+  category text not null,             -- regras logo abaixo (products_category_check)
   price numeric(10,2) not null check (price >= 0),
   old_price numeric(10,2),
   description text not null default '',
@@ -37,6 +37,13 @@ create table if not exists public.products (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Marcas e categorias aceitas (iguais a BRANDS e SUBS em lib/config.js).
+-- "outras" = marcas avulsas (ex.: roupas); o nome da marca fica em brand_label.
+alter table public.products drop constraint if exists products_brand_check;
+alter table public.products add constraint products_brand_check check (brand in ('capodarte','carmen','csclub','outras'));
+alter table public.products drop constraint if exists products_category_check;
+alter table public.products add constraint products_category_check check (category in ('bolsas','carteiras','calcados','roupas'));
+alter table public.products add column if not exists brand_label text;
 
 -- ---------- Opções de entrega regional (editáveis no painel) ----------
 create table if not exists public.shipping_options (
@@ -116,6 +123,7 @@ create table if not exists public.order_items (
   unit_price numeric(10,2) not null,
   image text
 );
+alter table public.order_items add column if not exists brand_label text; -- nome da marca avulsa
 create index if not exists order_items_order_idx on public.order_items (order_id);
 
 -- ---------- Cadastro de novidades ----------

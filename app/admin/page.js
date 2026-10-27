@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAdmin } from './_ctx';
 import { brl, fmtDateTime, MONTHS } from '@/lib/format';
 import { Delta, DailyChart, Bars } from './_components/charts';
-import { BRANDS, SUBS, STATUS, PAID_STATUSES, PAYMENT_LABEL } from '@/lib/config';
+import { BRANDS, SUBS, STATUS, PAID_STATUSES, PAYMENT_LABEL, brandName } from '@/lib/config';
 
 export default function Dashboard() {
   const { sb } = useAdmin();
@@ -51,7 +51,7 @@ export default function Dashboard() {
     const top = {};
     paid.forEach((o) => o.order_items.forEach((i) => {
       const k = i.product_id || i.name;
-      top[k] = top[k] || { name: i.name, image: i.image, qty: 0, v: 0, brand: i.brand, category: i.category };
+      top[k] = top[k] || { name: i.name, image: i.image, qty: 0, v: 0, brand: i.brand, brand_label: i.brand_label, category: i.category };
       top[k].qty += i.qty; top[k].v += Number(i.unit_price) * i.qty;
     }));
     return {
@@ -109,7 +109,7 @@ export default function Dashboard() {
                   {s.top.map((p) => (
                     <div className="it" key={p.name}>
                       {p.image ? <img className="thumb" src={p.image} alt="" /> : <span className="thumb" />}
-                      <div><b>{p.name}</b><span className="muted">{BRANDS[p.brand]?.name} · {SUBS[p.category]}</span></div>
+                      <div><b>{p.name}</b><span className="muted">{brandName(p.brand, p.brand_label)} · {SUBS[p.category]}</span></div>
                       <div style={{ textAlign: 'right' }}><b>{p.qty} un.</b><span className="muted">{brl(p.v)}</span></div>
                     </div>
                   ))}

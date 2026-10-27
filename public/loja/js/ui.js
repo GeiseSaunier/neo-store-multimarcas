@@ -1,5 +1,18 @@
 /* Neo Store · janelas e busca
    Abrir e fechar sacola, janelas, menu do celular e busca. */
+/* ================= Menus ================= */
+/* Topo, celular e rodapé montados a partir de BRANDS e SHORTCUTS (config.js).
+   Roda antes de effects.js, que posiciona o destaque do menu do topo. */
+(function renderMenus(){
+  const go=(g,t)=>`<a href="#loja" data-go="${g}">${t}</a>`;
+  const subs=(k,b)=>b.subs.map(s=>go(`${k}:${s}`,SUBS[s])).join('');
+  const cats=SHORTCUTS.map(s=>go(`cat:${s}`,SUBS[s])).join('');
+  $('#navEnd').insertAdjacentHTML('beforebegin',menuBrands().map(([k,b])=>`<div class="dd">${go(k,b.n)}<div class="menu">${subs(k,b)}</div></div>`).join('')+cats);
+  $('#mnavEnd').insertAdjacentHTML('beforebegin',menuBrands().map(([k,b])=>`${go(k,b.n)}<div class="msub">${subs(k,b)}</div>`).join('')+cats);
+  $('#footBrands').innerHTML=menuBrands().map(([k,b],i)=>`<h4${i?' style="margin-top:26px"':''}>${b.n}</h4><ul>${b.subs.map(s=>`<li>${go(`${k}:${s}`,SUBS[s])}</li>`).join('')}</ul>`).join('')+
+    `<h4 style="margin-top:26px">Categorias</h4><ul>${SHORTCUTS.map(s=>`<li>${go(`cat:${s}`,SUBS[s])}</li>`).join('')}</ul>`;
+})();
+
 /* ================= Overlay control ================= */
 let stack=[],lastFocus=null;
 function open(sel){lastFocus=document.activeElement;const el=$(sel);el.classList.add('on');el.setAttribute('aria-hidden','false');stack.push(sel);$('#scrim').classList.add('on');document.body.style.overflow='hidden';

@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Neo Store Multimarcas</title>
-<meta name="description" content="Bolsas, carteiras e calçados 100% originais Capodarte e Carmen Steffens. Entrega no mesmo dia em Parintins, até 3x sem juros e PIX com desconto.">
+<meta name="description" content="Bolsas, carteiras, calçados e roupas 100% originais Capodarte, Carmen Steffens, Cs Club e outras marcas. Entrega no mesmo dia em Parintins, até 3x sem juros e PIX com desconto.">
 <meta property="og:title" content="Neo Store Multimarcas">
-<meta property="og:description" content="Bolsas, carteiras e calçados 100% originais Capodarte e Carmen Steffens. Entrega no mesmo dia em Parintins, até 3x sem juros e PIX com desconto.">
+<meta property="og:description" content="Bolsas, carteiras, calçados e roupas 100% originais Capodarte, Carmen Steffens, Cs Club e outras marcas. Entrega no mesmo dia em Parintins, até 3x sem juros e PIX com desconto.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="/brand/tile.png">
 <link rel="icon" href="/brand/mono.png">
@@ -25,7 +25,7 @@
 </head>
 <body>
 
-<div class="strip">Bolsas e calçados 100% originais · Entrega no mesmo dia em Parintins · Até 3x sem juros</div>
+<div class="strip">Bolsas, calçados e roupas 100% originais · Entrega no mesmo dia em Parintins · Até 3x sem juros</div>
 
 <header class="site">
   <div class="wrap hbar">
@@ -36,9 +36,8 @@
     <nav class="main" aria-label="Principal">
       <span class="nav-pill" aria-hidden="true"></span>
       <a href="#loja" data-go="todos">Coleção</a>
-      <div class="dd"><a href="#loja" data-go="capodarte">Capodarte</a><div class="menu"><a href="#loja" data-go="capodarte:bolsas">Bolsas</a><a href="#loja" data-go="capodarte:carteiras">Carteiras</a></div></div>
-      <div class="dd"><a href="#loja" data-go="carmen">Carmen Steffens</a><div class="menu"><a href="#loja" data-go="carmen:bolsas">Bolsas</a><a href="#loja" data-go="carmen:carteiras">Carteiras</a><a href="#loja" data-go="carmen:calcados">Calçados</a></div></div>
-      <a href="#entrega">Entrega</a>
+      <!-- marcas e atalhos (Calçados, Roupas): montados por renderMenus() em loja/js/ui.js -->
+      <a href="#entrega" id="navEnd">Entrega</a>
       <a href="#sobre">A loja</a>
     </nav>
     <div class="tools">
@@ -109,7 +108,7 @@
 <section class="benefits">
   <div class="pattern" aria-hidden="true"></div>
   <div class="wrap ben-grid">
-    <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M16 4 6 9v7c0 6 4.5 10 10 12 5.5-2 10-6 10-12V9L16 4Z"/><path d="m11.5 16 3 3 6-6"/></svg><h3>100% originais</h3><p>Capodarte e Carmen Steffens, com procedência garantida.</p></div>
+    <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M16 4 6 9v7c0 6 4.5 10 10 12 5.5-2 10-6 10-12V9L16 4Z"/><path d="m11.5 16 3 3 6-6"/></svg><h3>100% originais</h3><p>Capodarte, Carmen Steffens, Cs Club e outras marcas, com procedência garantida.</p></div>
     <div class="ben reveal"><svg viewBox="0 0 32 32"><rect x="3" y="7" width="26" height="18" rx="2"/><path d="M3 12h26M8 20h6"/></svg><h3>3x sem juros</h3><p>Parcele suas compras no cartão em até 3 vezes.</p></div>
     <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M3 21h26l-3 5H6z"/><path d="M8 21V12h12l4 9M12 12V7h5v5"/><path d="M2 29c3 0 3-1.5 6-1.5S11 29 14 29s3-1.5 6-1.5 3 1.5 6 1.5" opacity=".6"/></svg><h3>Entrega rápida</h3><p>Mesmo dia em Parintins, barco para Maués e Manaus e Correios para todo o Brasil.</p></div>
     <div class="ben reveal"><svg viewBox="0 0 32 32"><path d="M4 20l1.6-4.8A10.5 10.5 0 1 1 10 26.5L4 28Z" transform="translate(1 -2)"/></svg><h3>Atendimento próximo</h3><p>Tire dúvidas e acompanhe seu pedido pelo WhatsApp.</p></div>
@@ -137,10 +136,10 @@
           <svg viewBox="0 0 200 200"><defs><path id="sealc" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0"/></defs><text><textPath href="#sealc" textLength="500" lengthAdjust="spacing">100% ORIGINAL · NEO STORE · 100% ORIGINAL · NEO STORE ·</textPath></text></svg>
           <span class="mono"></span>
         </div>
-        <h3>Bolsas e calçados 100% originais</h3>
+        <h3>Bolsas, calçados e roupas 100% originais</h3>
         <p>Trabalhamos só com peças originais das marcas que vendemos. Você compra com a certeza de procedência e qualidade.</p>
         <div class="brands-label">Nossas marcas</div>
-        <ul class="brands"><li>Capodarte</li><li>Carmen Steffens</li></ul>
+        <ul class="brands"><li>Capodarte</li><li>Carmen Steffens</li><li>Cs Club</li></ul>
       </div>
       <div class="ship reveal">
         <div class="ship-intro"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M3 21h26l-3 5H6z"/><path d="M8 21V12h12l4 9M12 12V7h5v5"/><path d="M2 29c3 0 3-1.5 6-1.5S11 29 14 29s3-1.5 6-1.5 3 1.5 6 1.5" opacity=".6"/></svg>
@@ -177,10 +176,10 @@
     <div class="f-grid">
       <div>
         <span class="word"></span>
-        <p style="color:var(--muted);max-width:26em;margin:0">Bolsas e calçados originais Capodarte e Carmen Steffens, com curadoria e atendimento próximo.</p>
+        <p style="color:var(--muted);max-width:26em;margin:0">Bolsas, calçados e roupas originais Capodarte, Carmen Steffens, Cs Club e outras marcas, com curadoria e atendimento próximo.</p>
         <div class="pay-icons"><span>PIX</span><span>Visa</span><span>Mastercard</span><span>Elo</span><span>Amex</span><span>Boleto</span></div>
       </div>
-      <div><h4>Capodarte</h4><ul><li><a href="#loja" data-go="capodarte:bolsas">Bolsas</a></li><li><a href="#loja" data-go="capodarte:carteiras">Carteiras</a></li></ul><h4 style="margin-top:26px">Carmen Steffens</h4><ul><li><a href="#loja" data-go="carmen:bolsas">Bolsas</a></li><li><a href="#loja" data-go="carmen:carteiras">Carteiras</a></li><li><a href="#loja" data-go="carmen:calcados">Calçados</a></li></ul></div>
+      <div id="footBrands"></div>
       <div><h4>Ajuda</h4><ul><li><a href="/trocas">Trocas e devoluções</a></li><li><a href="#entrega">Entrega e frete</a></li><li><a href="#sobre">Garantia de originalidade</a></li><li><a href="/pagamentos">Formas de pagamento</a></li><li><a href="/privacidade">Política de privacidade</a></li></ul></div>
       <div><h4>Contato</h4><ul><li><a href="https://wa.me/5592984848096" target="_blank" rel="noopener">WhatsApp (92) 98484-8096</a></li><li><a id="igLink" href="#" target="_blank" rel="noopener">Instagram</a></li><li><a id="mailLink" href="#"></a></li><li>Seg a sáb, 9h às 19h</li></ul></div>
     </div>
@@ -205,17 +204,13 @@
     <input id="q" type="search" placeholder="O que você procura?" aria-label="Buscar produtos">
     <button class="icon-btn" data-close aria-label="Fechar busca"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   </div>
-  <div class="wrap sugg" id="sugg"><span>Buscas frequentes:</span><button>bolsa</button><button>carteira</button><button>monograma</button><button>Carmen Steffens</button></div>
+  <div class="wrap sugg" id="sugg"><span>Buscas frequentes:</span><button>bolsa</button><button>carteira</button><button>monograma</button><button>Carmen Steffens</button><button>Cs Club</button></div>
 </div>
 
 <nav class="mnav" id="mnav" aria-label="Menu">
   <button class="icon-btn" data-close aria-label="Fechar menu" style="align-self:flex-end"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <a href="#loja" data-go="todos">Coleção</a>
-  <a href="#loja" data-go="capodarte">Capodarte</a>
-  <div class="msub"><a href="#loja" data-go="capodarte:bolsas">Bolsas</a><a href="#loja" data-go="capodarte:carteiras">Carteiras</a></div>
-  <a href="#loja" data-go="carmen">Carmen Steffens</a>
-  <div class="msub"><a href="#loja" data-go="carmen:bolsas">Bolsas</a><a href="#loja" data-go="carmen:carteiras">Carteiras</a><a href="#loja" data-go="carmen:calcados">Calçados</a></div>
-  <a href="#entrega">Entrega</a>
+  <a href="#entrega" id="mnavEnd">Entrega</a>
   <a href="#sobre">A loja</a>
   <span class="mono"></span>
 </nav>

@@ -6,7 +6,7 @@ import { json, fail, siteUrl } from '@/lib/api';
 import { onlyDigits, round2, validCpf } from '@/lib/format';
 import { STORE } from '@/lib/config';
 import { tooMany } from '@/lib/ratelimit';
-import { expireStaleOrders, stockMessage } from '@/lib/orders';
+import { expireStaleOrders, stockMessage, stockText } from '@/lib/orders';
 export const dynamic = 'force-dynamic';
 
 // Quantas peças ainda há para um tamanho (null = estoque não controlado).
@@ -65,11 +65,8 @@ export async function POST(req) {
       const key = p.size_stock ? `${p.id}|${size}` : p.id;
       qtyById[key] = (qtyById[key] || 0) + qty;
       const avail = available(p, size);
-      if (avail != null && qtyById[key] > avail) {
-        const what = p.size_stock && size !== 'Único' ? `${p.name} no tamanho ${size}` : p.name;
-        return fail(avail > 0 ? `Temos só ${avail} unidade(s) de ${what}.` : `${what} está esgotada. Atualize a página.`);
-      }
-      lines.push({ product_id: p.id, name: p.name, brand: p.brand, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: Number(p.price), image: p.images?.[0] || null });
+      if (avail != null && qtyById[key] > avail) return fail(stockText(p.name, p.size_stock ? size : null, avail));
+      lines.push({ product_id: p.id, name: p.name, brand: p.brand, brand_label: p.brand_label || null, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: Number(p.price), image: p.images?.[0] || null });
     }
     const subtotal = round2(lines.reduce((s, l) => s + l.unit_price * l.qty, 0));
 

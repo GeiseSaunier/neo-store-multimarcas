@@ -31,7 +31,7 @@ export function DailyChart({ days }) {
           const x = P.l + i * bw + bw * 0.18, w = bw * 0.64, r = Math.min(w / 2, h);
           return (
             <g key={i}>
-              {d.v > 0 && <path className="bar" d={`M${x},${H - P.b} V${H - P.b - h + r} A${w / 2},${r} 0 0 1 ${x + w},${H - P.b - h + r} V${H - P.b} Z`}><title>{`Dia ${i + 1}: ${brl(d.v)} · ${d.n} pedido(s)`}</title></path>}
+              {d.v > 0 && <path className="bar" d={`M${x},${H - P.b} V${H - P.b - h + r} A${w / 2},${r} 0 0 1 ${x + w},${H - P.b - h + r} V${H - P.b} Z`}><title>{`Dia ${i + 1}: ${brl(d.v)} · ${d.n} ${d.n === 1 ? 'pedido' : 'pedidos'}`}</title></path>}
               {(i === 0 || (i + 1) % 5 === 0) && <text className="axis" x={x + w / 2} y={H - 8} textAnchor="middle">{i + 1}</text>}
             </g>
           );

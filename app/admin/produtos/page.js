@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useAdmin } from '../_ctx';
 import { brl } from '@/lib/format';
-import { BRANDS, SUBS } from '@/lib/config';
+import { BRANDS, SUBS, brandName } from '@/lib/config';
 
 export default function Products() {
   const { sb } = useAdmin();
@@ -23,7 +23,7 @@ export default function Products() {
   return (
     <>
       <div className="page-head">
-        <div><h1>Produtos</h1><p>{rows ? `${rows.filter((p) => p.active).length} peças à venda na loja.` : ' '}</p></div>
+        <div><h1>Produtos</h1><p>{rows ? (() => { const n = rows.filter((p) => p.active).length; return `${n} ${n === 1 ? 'peça' : 'peças'} à venda na loja.`; })() : ' '}</p></div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <input className="input" placeholder="Buscar peça" value={q} onChange={(e) => setQ(e.target.value)} style={{ width: 220 }} />
           <Link href="/admin/produtos/nova" className="btn solid"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>Nova peça</Link>
@@ -44,7 +44,7 @@ export default function Products() {
               </div>
               <div className="info">
                 <b>{p.name}</b>
-                <span className="muted" style={{ fontSize: 12 }}>{BRANDS[p.brand]?.name} · {SUBS[p.category]}</span>
+                <span className="muted" style={{ fontSize: 12 }}>{brandName(p.brand, p.brand_label)} · {SUBS[p.category]}</span>
                 <span>{p.old_price ? <s className="muted" style={{ fontSize: 12, marginRight: 6 }}>{brl(p.old_price)}</s> : null}{brl(p.price)}{p.stock != null ? <span className="muted" style={{ fontSize: 12 }}> · {p.stock} em estoque</span> : null}</span>
               </div>
             </Link>

@@ -5,7 +5,7 @@ function addToCart(id,size,col,qty){const p=P.find(x=>x.id===id);const r=room(p,
   if(r<1){toast(`Não há mais unidades de ${p.n}${size!=='Único'?' no tamanho '+size:''}`);return}
   const cut=qty>r;qty=Math.min(qty,r);const k=`${id}|${size}|${col}`;const ex=cart.find(x=>x.k===k);
   if(ex)ex.q=Math.min(9,ex.q+qty);else cart.push({k,id,size,col,q:qty});save();
-  toast(cut?`Só havia ${qty} unidade(s) disponível(is) de ${p.n}`:`${p.n} na sacola`,['Ver sacola',openDrawer]);updateBadges('cart',true)}
+  toast(cut?`Só havia ${qty} ${qty===1?'unidade disponível':'unidades disponíveis'} de ${p.n}`:`${p.n} na sacola`,['Ver sacola',openDrawer]);updateBadges('cart',true)}
 /* valor de uma entrega regional como a cliente vê */
 function shipPrice(o){return o.price_label?esc(o.price_label):o.to_confirm?'Consulte':o.price?brl(o.price):'Grátis'}
 function save(){store.set('neo-cart',cart);store.set('neo-coupon',coupon);renderDrawer();updateBadges()}
