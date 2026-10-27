@@ -5,13 +5,13 @@ const BRANDS={capodarte:{n:'Capodarte',subs:['bolsas','carteiras']},carmen:{n:'C
 const SUBS={bolsas:'Bolsas',carteiras:'Carteiras',calcados:'Calçados',roupas:'Roupas'};
 /* Atalhos do menu que juntam uma categoria de todas as marcas. */
 const SHORTCUTS=['calcados','roupas'];
-const WA='https://wa.me/5592984848096', WA_LABEL='(92) 98484-8096';
+const WA='https://wa.me/5592984558425', WA_LABEL='(92) 98455-8425';
 /* Cupom citado no cadastro de novidades (só aparece se estiver ativo no painel). */
 const WELCOME_COUPON='BEMVINDA';
 /* PIX direto na conta da loja (confirmação manual). Manter igual a PIX em lib/config.js. */
 const PIX={direct:true,keyLabel:'32.315.010/0001-02',keyType:'CNPJ',name:'Vanessa Neo Gomes',bank:'Nubank'};
 /* Dados da empresa no rodapé. Manter igual a LEGAL em lib/config.js. */
-const LEGAL={company:'Neo Store Multimarcas',cnpj:'32.315.010/0001-02',cities:'Maués e Parintins - AM',email:'contato@neostore.com.br',instagram:'https://www.instagram.com/[usuario]'};
+const LEGAL={company:'Neo Store Multimarcas',cnpj:'32.315.010/0001-02',cities:'Maués e Parintins - AM',email:'contato@neostore.com.br',instagram:'https://www.instagram.com/_neo_store_/'};
 const menuBrands=()=>Object.entries(BRANDS).filter(([,b])=>b.menu!==false);
 const brandOf=p=>p.b==='outras'&&p.bl?p.bl:BRANDS[p.b].n;
 const label=p=>`${brandOf(p)} · ${SUBS[p.c]}`;
