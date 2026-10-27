@@ -131,7 +131,7 @@ export default function AdminLayout({ children }) {
     <div className="empty" style={{ paddingTop: '25vh' }}>
       <span className="mono" />
       <p>Esta conta ({session?.user?.email}) não tem acesso ao painel.</p>
-      <p className="muted">Peça para um administrador liberar o seu acesso (veja o guia de instalação).</p>
+      <p className="muted">Peça para um administrador liberar o seu acesso (veja o README do projeto).</p>
       <button className="btn ghost" onClick={signOut}>Sair</button>
     </div>
   );

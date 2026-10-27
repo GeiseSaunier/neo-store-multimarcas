@@ -57,6 +57,13 @@ create table if not exists public.coupons (
   active boolean not null default true,
   created_at timestamptz not null default now()
 );
+-- Cupom que vale só na primeira compra de cada CPF (ex.: BEMVINDA).
+do $$ begin
+  if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'coupons' and column_name = 'first_purchase') then
+    alter table public.coupons add column first_purchase boolean not null default false;
+    update public.coupons set first_purchase = true where code = 'BEMVINDA';
+  end if;
+end $$;
 
 -- ---------- Pedidos ----------
 create table if not exists public.orders (
@@ -94,6 +101,7 @@ create table if not exists public.orders (
 );
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_status_idx on public.orders (status);
+create index if not exists orders_cpf_idx on public.orders (cpf);
 
 create table if not exists public.order_items (
   id uuid primary key default gen_random_uuid(),
@@ -127,16 +135,79 @@ create trigger products_touch before update on public.products for each row exec
 drop trigger if exists orders_touch on public.orders;
 create trigger orders_touch before update on public.orders for each row execute function public.touch_updated_at();
 
--- ---------- Baixa de estoque ao confirmar pagamento ----------
-create or replace function public.decrement_stock(p_order uuid) returns void
+-- ---------- Estoque ----------
+-- Estoque por tamanho (calçados): {"35": 2, "36": 0}. Vazio = usa a coluna stock.
+alter table public.products add column if not exists size_stock jsonb;
+-- Indica se as peças do pedido já saíram do estoque (reservadas na criação do pedido).
+alter table public.orders add column if not exists stock_reserved boolean not null default false;
+-- Pedidos pagos antes desta versão já tinham baixado o estoque.
+update public.orders set stock_reserved = true where status in ('paid','shipped','delivered') and not stock_reserved;
+
+-- Com estoque por tamanho, a coluna stock guarda a soma (para "Esgotado" e para o painel).
+create or replace function public.products_sum_stock() returns trigger language plpgsql as $$
+begin
+  if jsonb_typeof(new.size_stock) = 'object' and new.size_stock <> '{}'::jsonb then
+    select coalesce(sum(greatest(0, value::int)), 0) into new.stock from jsonb_each_text(new.size_stock);
+  else
+    new.size_stock := null;
+  end if;
+  return new;
+end; $$;
+drop trigger if exists products_sum_stock on public.products;
+create trigger products_sum_stock before insert or update on public.products for each row execute function public.products_sum_stock();
+
+-- Tira (p_dir = -1) ou devolve (p_dir = 1) as peças de um pedido.
+-- Sem p_force, falha com 'ESTOQUE|nome|tamanho|disponível' se faltar peça.
+create or replace function public.apply_stock(p_order uuid, p_dir int, p_force boolean) returns void
+language plpgsql security definer set search_path = public as $$
+declare r record; p record; avail int;
+begin
+  for r in select product_id, coalesce(size, 'Único') size, sum(qty)::int q from public.order_items
+            where order_id = p_order and product_id is not null
+            group by product_id, coalesce(size, 'Único') order by product_id loop
+    select id, name, stock, size_stock into p from public.products where id = r.product_id for update;
+    if not found then continue; end if;
+    if p.size_stock is not null then
+      avail := coalesce((p.size_stock ->> r.size)::int, 0);
+      if p_dir < 0 and not p_force and avail < r.q then raise exception 'ESTOQUE|%|%|%', p.name, r.size, avail; end if;
+      update public.products set size_stock = jsonb_set(size_stock, array[r.size], to_jsonb(greatest(0, avail + p_dir * r.q))) where id = p.id;
+    elsif p.stock is not null then
+      if p_dir < 0 and not p_force and p.stock < r.q then raise exception 'ESTOQUE|%||%', p.name, p.stock; end if;
+      update public.products set stock = greatest(0, stock + p_dir * r.q) where id = p.id;
+    end if;
+  end loop;
+end; $$;
+
+-- Reserva o estoque de um pedido recém-criado (chamado pelo checkout).
+create or replace function public.reserve_stock(p_order uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
-  update public.products p
-     set stock = greatest(0, p.stock - i.qty)
-    from (select product_id, sum(qty) qty from public.order_items where order_id = p_order group by product_id) i
-   where p.id = i.product_id and p.stock is not null;
+  if exists (select 1 from public.orders where id = p_order and stock_reserved) then return; end if;
+  perform public.apply_stock(p_order, -1, false);
+  update public.orders set stock_reserved = true where id = p_order;
 end; $$;
-revoke execute on function public.decrement_stock(uuid) from anon, authenticated;
+
+-- Mudança de status mexe no estoque sozinha, venha do painel, do Mercado Pago ou da expiração:
+-- cancelado devolve as peças; reaberto ou pago volta a reservar (pagamento nunca é bloqueado).
+create or replace function public.orders_stock_on_status() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.status is not distinct from old.status then return new; end if;
+  if new.status in ('pending','paid') and not new.stock_reserved then
+    perform public.apply_stock(new.id, -1, new.status = 'paid');
+    new.stock_reserved := true;
+  elsif new.stock_reserved and (new.status = 'cancelled' or (new.status = 'refunded' and old.status in ('pending','paid'))) then
+    perform public.apply_stock(new.id, 1, false);
+    new.stock_reserved := false;
+  end if;
+  return new;
+end; $$;
+drop trigger if exists orders_stock on public.orders;
+create trigger orders_stock before update of status on public.orders for each row execute function public.orders_stock_on_status();
+
+drop function if exists public.decrement_stock(uuid);
+revoke execute on function public.apply_stock(uuid, int, boolean) from public, anon, authenticated;
+revoke execute on function public.reserve_stock(uuid) from public, anon, authenticated;
 
 -- ---------- Segurança (RLS) ----------
 alter table public.admins enable row level security;
@@ -200,7 +271,8 @@ insert into public.shipping_options (id, name, description, price, price_label, 
   ('barco','Entrega no barco, rodoviária ou táxi','Outros municípios · combinamos os dados pelo WhatsApp',20,null,false,4)
 on conflict (id) do nothing;
 
-insert into public.coupons (code, percent) values ('NEO10',10),('BEMVINDA',10)
+-- Cupons de exemplo: confirme com a loja antes de abrir para clientes (ou desative no painel).
+insert into public.coupons (code, percent, first_purchase) values ('NEO10',10,false),('BEMVINDA',10,true)
 on conflict (code) do nothing;
 
 insert into public.products (name, brand, category, price, description, details, colors, images, position)

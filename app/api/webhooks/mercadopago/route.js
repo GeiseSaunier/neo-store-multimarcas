@@ -24,7 +24,13 @@ export async function POST(req) {
 
     const upd = { mp_payment_id: String(pay.id), mp_status: pay.status };
     let becamePaid = false;
-    if (pay.status === 'approved' && ['pending', 'cancelled'].includes(order.status)) {
+    // O valor pago precisa bater com o total do pedido.
+    const amountOk = Math.abs(Number(pay.transaction_amount) - Number(order.total)) < 0.01;
+    if (pay.status === 'approved' && !amountOk) {
+      if (order.status === 'pending' && !(order.notes || '').includes('Atenção: o Mercado Pago aprovou')) upd.notes = `${order.notes ? order.notes + '\n' : ''}Atenção: o Mercado Pago aprovou ${pay.transaction_amount}, diferente do total do pedido. Confira antes de enviar.`;
+      console.error('webhook: valor divergente', orderId, pay.transaction_amount, order.total);
+    } else if (pay.status === 'approved' && ['pending', 'cancelled'].includes(order.status)) {
+      // O banco reserva o estoque de novo se o pedido tinha sido cancelado por falta de pagamento.
       Object.assign(upd, { status: 'paid', paid_at: new Date().toISOString(), seen: false });
       becamePaid = true;
     } else if (['refunded', 'charged_back'].includes(pay.status)) {
@@ -32,10 +38,10 @@ export async function POST(req) {
     } else if (pay.status === 'cancelled' && order.status === 'pending') {
       upd.status = 'cancelled';
     }
-    await db.from('orders').update(upd).eq('id', orderId);
+    const { error: ue } = await db.from('orders').update(upd).eq('id', orderId);
+    if (ue) throw ue;
 
     if (becamePaid) {
-      await db.rpc('decrement_stock', { p_order: orderId });
       const { data: items } = await db.from('order_items').select('*').eq('order_id', orderId);
       await notifyPaid({ ...order, ...upd }, items || []);
     }

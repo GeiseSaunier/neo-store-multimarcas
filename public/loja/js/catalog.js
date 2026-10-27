@@ -2,7 +2,11 @@
    Cartões de produto, marcas, filtros, favoritos e janela do produto. */
 function pic(p){return p.img?`<img src="${esc(p.img)}" alt="${p.n}" loading="lazy">`:`<span class="mono" style="width:22%;color:var(--stone)"></span>`}
 function mapP(x){const cols=(x.colors||[]).filter(Boolean);return{id:x.id,n:esc(x.name),b:x.brand,c:x.category,img:x.images?.[0]||'',imgs:x.images||[],p:x.price,o:x.old_price||0,
-  sizes:(x.sizes?.length?x.sizes:['Único']).map(esc),cols:cols.length?cols.map(esc):[''],d:esc(x.description),det:(x.details||[]).map(esc),out:x.stock===0}}
+  sizes:(x.sizes?.length?x.sizes:['Único']).map(esc),cols:cols.length?cols.map(esc):[''],d:esc(x.description),det:(x.details||[]).map(esc),out:x.stock===0,st:x.stock,
+  ss:x.size_stock?Object.fromEntries(Object.entries(x.size_stock).map(([k,v])=>[esc(k),+v])):null}}
+/* estoque: quanto há do tamanho e quanto ainda cabe na sacola */
+function avail(p,size){if(p.ss)return p.ss[size]??0;return p.st==null?99:p.st}
+function room(p,size){return Math.max(0,avail(p,size)-cart.filter(i=>i.id===p.id&&(!p.ss||i.size===size)).reduce((s,i)=>s+i.q,0))}
 
 /* ================= Categories ================= */
 function renderCats(){$('#cats').innerHTML=Object.entries(BRANDS).map(([k,b])=>{const n=countOf(k);const img=(P.find(p=>p.b===k&&p.img)||{}).img;return`<div class="cat ${img?'':'soon'}">
@@ -78,7 +82,7 @@ function openProduct(id){const p=P.find(x=>x.id===id);sel={id,size:p.sizes.lengt
    <div><div class="price">${p.o?`<s>${brl(p.o)}</s>`:''}${brl(p.p)}</div><div class="inst">${inst(p.p)} · ${brl(p.p*.95)} no PIX</div></div>
    <p class="desc">${p.d}</p>
    <div ${p.cols.length<2?'hidden':''}><div class="opt-label">Cor</div><div class="chips" id="pCols">${p.cols.map((c,i)=>`<button class="color-chip" style="background:${c}" data-col="${c}" aria-pressed="${i===0}" aria-label="Cor ${i+1}"></button>`).join('')}</div></div>
-   ${p.sizes.length>1?`<div><div class="opt-label">Tamanho <span id="sizeWarn" class="hint err"></span></div><div class="chips" id="pSizes">${p.sizes.map(s=>`<button class="chip" data-size="${s}" aria-pressed="false">${s}</button>`).join('')}</div></div>`:''}
+   ${p.sizes.length>1?`<div><div class="opt-label">Tamanho <span id="sizeWarn" class="hint err"></span></div><div class="chips" id="pSizes">${p.sizes.map(s=>`<button class="chip" data-size="${s}" aria-pressed="false" ${p.ss&&!avail(p,s)?'disabled title="Esgotado"':''}>${s}</button>`).join('')}</div></div>`:''}
    <div style="display:flex;gap:12px;align-items:center;margin-top:6px">
      <div class="qty" style="height:52px"><button id="qm" aria-label="Diminuir">−</button><span id="qv">1</span><button id="qp" aria-label="Aumentar">+</button></div>
      <button class="btn solid" style="flex:1" id="addBtn" ${p.out?'disabled':''}>${p.out?'Esgotado':'Adicionar à sacola'}</button>
@@ -90,11 +94,11 @@ function openProduct(id){const p=P.find(x=>x.id===id);sel={id,size:p.sizes.lengt
   const box=$('#pBox');
   box.onclick=e=>{const t=e.target;
     const c=t.closest('[data-col]');if(c){sel.col=c.dataset.col;$$('#pCols [data-col]').forEach(b=>b.setAttribute('aria-pressed',b===c))}
-    const s=t.closest('[data-size]');if(s){sel.size=s.dataset.size;$$('#pSizes [data-size]').forEach(b=>b.setAttribute('aria-pressed',b===s));const w=$('#sizeWarn');if(w)w.textContent=''}
+    const s=t.closest('[data-size]');if(s){sel.size=s.dataset.size;$$('#pSizes [data-size]').forEach(b=>b.setAttribute('aria-pressed',b===s));const w=$('#sizeWarn');if(w)w.textContent='';sel.qty=Math.max(1,Math.min(sel.qty,room(p,sel.size)));$('#qv').textContent=sel.qty}
     const f=t.closest('[data-fav]');if(f)toggleFav(f.dataset.fav,f);
     const gi=t.closest('[data-img]');if(gi){box.querySelector('.pic > img').src=gi.dataset.img;box.querySelectorAll('[data-img]').forEach(x=>x.setAttribute('aria-pressed',x===gi))}
     if(t.closest('#qm')){sel.qty=Math.max(1,sel.qty-1);$('#qv').textContent=sel.qty}
-    if(t.closest('#qp')){sel.qty=Math.min(9,sel.qty+1);$('#qv').textContent=sel.qty}
+    if(t.closest('#qp')){const max=Math.min(9,sel.size?Math.max(1,room(p,sel.size)):9);if(sel.qty>=max&&sel.size)toast('Não há mais unidades disponíveis');sel.qty=Math.min(max,sel.qty+1);$('#qv').textContent=sel.qty}
     if(t.closest('#addBtn')){if(!sel.size){$('#sizeWarn').textContent='· escolha um tamanho';return}
       addToCart(sel.id,sel.size,sel.col,sel.qty);close('#pModal');setTimeout(()=>openDrawer(),250)}
   };

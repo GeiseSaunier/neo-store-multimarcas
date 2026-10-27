@@ -7,7 +7,7 @@ import { BRANDS, SUBS } from '@/lib/config';
 import { shrink } from '@/lib/image';
 import Chips from '../../_components/Chips';
 
-const EMPTY = { name: '', brand: 'capodarte', category: 'bolsas', price: '', old_price: '', description: '', details: '', sizes: ['Único'], colors: [], images: [], stock: '', active: true, position: 0 };
+const EMPTY = { name: '', brand: 'capodarte', category: 'bolsas', price: '', old_price: '', description: '', details: '', sizes: ['Único'], colors: [], images: [], stock: '', size_stock: {}, active: true, position: 0 };
 const SIZE_PRESETS = [['Único', ['Único']], ['33 ao 39', ['33', '34', '35', '36', '37', '38', '39']], ['PP ao GG', ['PP', 'P', 'M', 'G', 'GG']]];
 
 export default function ProductForm() {
@@ -25,7 +25,8 @@ export default function ProductForm() {
     if (isNew) return;
     sb.from('products').select('*').eq('id', id).maybeSingle().then(({ data }) => {
       if (!data) { setMsg({ t: 'Peça não encontrada.' }); return; }
-      setF({ ...data, price: String(data.price), old_price: data.old_price ? String(data.old_price) : '', details: (data.details || []).join('\n'), stock: data.stock ?? '', sizes: data.sizes?.length ? data.sizes : ['Único'] });
+      setF({ ...data, price: String(data.price), old_price: data.old_price ? String(data.old_price) : '', details: (data.details || []).join('\n'), stock: data.stock ?? '', sizes: data.sizes?.length ? data.sizes : ['Único'],
+        size_stock: Object.fromEntries(Object.entries(data.size_stock || {}).map(([k, v]) => [k, String(v)])) });
     });
   }, [id, isNew, sb]);
 
@@ -59,11 +60,16 @@ export default function ProductForm() {
     if (old !== null && !(old > price)) return setMsg({ t: 'O preço “de” precisa ser maior que o preço atual. Deixe vazio se a peça não estiver em promoção.' });
     if (!f.images.length) return setMsg({ t: 'Envie pelo menos uma foto.' });
     setBusy('save'); setMsg({ t: '' });
+    const sizes = f.sizes.length ? f.sizes : ['Único'];
+    // Com mais de um tamanho, o estoque é por tamanho (o banco guarda a soma em "stock").
+    const multi = sizes.length > 1;
+    const bySize = multi && sizes.some((s) => String(f.size_stock[s] ?? '').trim() !== '');
     const row = {
       name: f.name.trim(), brand: f.brand, category: f.category, price, old_price: old,
       description: f.description.trim(), details: f.details.split('\n').map((s) => s.trim()).filter(Boolean),
-      sizes: f.sizes.length ? f.sizes : ['Único'], colors: f.colors, images: f.images,
-      stock: f.stock === '' ? null : Math.max(0, parseInt(f.stock, 10) || 0), active: f.active, position: Number(f.position) || 0,
+      sizes, colors: f.colors, images: f.images,
+      size_stock: bySize ? Object.fromEntries(sizes.map((s) => [s, Math.max(0, parseInt(f.size_stock[s], 10) || 0)])) : null,
+      stock: multi || f.stock === '' ? null : Math.max(0, parseInt(f.stock, 10) || 0), active: f.active, position: Number(f.position) || 0,
     };
     const { data, error } = isNew ? await sb.from('products').insert(row).select().single() : await sb.from('products').update(row).eq('id', id).select().single();
     setBusy('');
@@ -133,8 +139,22 @@ export default function ProductForm() {
             </div>
             <span className="help">Com mais de uma cor, a cliente escolhe na página da peça.</span>
           </div>
+          {f.sizes.length > 1 && (
+            <div className="field">
+              <label>Estoque por tamanho (opcional)</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {f.sizes.map((s) => (
+                  <label key={s} style={{ display: 'grid', gap: 4, width: 64, fontSize: 12, textAlign: 'center' }}>{s}
+                    <input inputMode="numeric" value={f.size_stock[s] ?? ''} placeholder="–" style={{ textAlign: 'center' }} aria-label={`Estoque do tamanho ${s}`}
+                      onChange={(e) => setF((st) => ({ ...st, size_stock: { ...st.size_stock, [s]: e.target.value.replace(/\D/g, '') } }))} />
+                  </label>
+                ))}
+              </div>
+              <span className="help">Deixe todos vazios para não controlar o estoque. Preenchendo algum, tamanho vazio conta como 0 (esgotado). O estoque baixa sozinho a cada pedido.</span>
+            </div>
+          )}
           <div className="row">
-            <div className="field"><label htmlFor="st">Estoque (opcional)</label><input id="st" inputMode="numeric" value={f.stock} onChange={set('stock')} placeholder="Sem controle" /><span className="help">Com estoque 0, a peça aparece como esgotada.</span></div>
+            {f.sizes.length > 1 ? <div /> : <div className="field"><label htmlFor="st">Estoque (opcional)</label><input id="st" inputMode="numeric" value={f.stock} onChange={set('stock')} placeholder="Sem controle" /><span className="help">Com estoque 0, a peça aparece como esgotada. O estoque baixa sozinho a cada pedido.</span></div>}
             <div className="field"><label htmlFor="po">Ordem na vitrine</label><input id="po" inputMode="numeric" value={f.position} onChange={set('position')} /><span className="help">Números menores aparecem primeiro.</span></div>
           </div>
         </div>

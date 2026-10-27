@@ -15,7 +15,9 @@ export default function Dashboard() {
 
   const load = useCallback(async () => {
     const start = new Date(ym.y, ym.m - 1, 1), end = new Date(ym.y, ym.m + 1, 1);
-    const { data, error } = await sb.from('orders').select('*, order_items(*)').gte('created_at', start.toISOString()).lt('created_at', end.toISOString()).order('created_at', { ascending: false });
+    const { data, error } = await sb.from('orders').select('*, order_items(*)')
+      // pedidos criados ou pagos no período (boleto pago no mês seguinte conta no mês do pagamento)
+      .or(`and(created_at.gte."${start.toISOString()}",created_at.lt."${end.toISOString()}"),and(paid_at.gte."${start.toISOString()}",paid_at.lt."${end.toISOString()}")`).order('created_at', { ascending: false });
     if (error) setErr('Não foi possível carregar os dados.'); else { setErr(''); setOrders(data); }
   }, [sb, ym]);
   useEffect(() => { setOrders(null); load(); }, [load]);
@@ -23,7 +25,8 @@ export default function Dashboard() {
 
   const s = useMemo(() => {
     if (!orders) return null;
-    const inMonth = (o, y, m) => { const d = new Date(o.created_at); return d.getFullYear() === y && d.getMonth() === m; };
+    // Vendas contam na data do pagamento; pedidos em aberto, na data em que foram feitos.
+    const inMonth = (o, y, m) => { const d = new Date(PAID_STATUSES.includes(o.status) ? o.paid_at || o.created_at : o.created_at); return d.getFullYear() === y && d.getMonth() === m; };
     const prevY = ym.m === 0 ? ym.y - 1 : ym.y, prevM = (ym.m + 11) % 12;
     const cur = orders.filter((o) => inMonth(o, ym.y, ym.m));
     const prev = orders.filter((o) => inMonth(o, prevY, prevM));
@@ -34,7 +37,7 @@ export default function Dashboard() {
     const pending = cur.filter((o) => o.status === 'pending');
     const dim = new Date(ym.y, ym.m + 1, 0).getDate();
     const days = Array.from({ length: dim }, () => ({ v: 0, n: 0 }));
-    paid.forEach((o) => { const d = new Date(o.created_at).getDate() - 1; days[d].v += Number(o.total); days[d].n++; });
+    paid.forEach((o) => { const d = new Date(o.paid_at || o.created_at).getDate() - 1; days[d].v += Number(o.total); days[d].n++; });
     const group = (fn) => {
       const m = {};
       paid.forEach((o) => o.order_items.forEach((i) => { const k = fn(i, o); m[k] = (m[k] || 0) + Number(i.unit_price) * i.qty; }));

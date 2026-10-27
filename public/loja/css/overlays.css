@@ -49,6 +49,8 @@
 .chip{min-width:46px;height:42px;padding:0 14px;border:1px solid var(--line);border-radius:6px;font-size:13px;transition:all .2s}
 .chip:hover{border-color:var(--ink)}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--linen);border-color:var(--ink)}
+.chip:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.chip:disabled:hover{border-color:var(--line)}
 .color-chip{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);position:relative}
 .color-chip[aria-pressed="true"]{box-shadow:0 0 0 2px var(--linen),0 0 0 3px var(--ink)}
 .pv .desc{font-size:14px;color:var(--text);margin:0}

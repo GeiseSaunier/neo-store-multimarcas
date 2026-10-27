@@ -1,0 +1,14 @@
+:root{--sand:#EFE3DC;--linen:#F8F2EE;--ink:#73625A;--text:#4A3E37;--muted:#8A7A70;--line:rgba(115,98,88,.22);--serif:"Cormorant Garamond",Garamond,serif;--sans:"Montserrat","Helvetica Neue",Arial,sans-serif;--mono:url('/brand/mono.png')}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.info{padding:40px 18px 60px}
+.info article{background:var(--linen);border-radius:6px;width:min(760px,100%);margin:0 auto;padding:44px clamp(20px,5vw,48px)}
+.info .back{display:inline-flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-size:13px;letter-spacing:.06em;margin-bottom:28px}
+.info .mono{width:22px;aspect-ratio:652/868;background:var(--ink);-webkit-mask:var(--mono) center/contain no-repeat;mask:var(--mono) center/contain no-repeat}
+.info h1{font-family:var(--serif);font-weight:300;font-size:clamp(34px,6vw,46px);line-height:1.05;color:var(--ink);margin:0 0 8px}
+.info h2{font-family:var(--serif);font-weight:400;font-size:26px;color:var(--ink);margin:34px 0 10px}
+.info p,.info li{line-height:1.7;font-size:15px}
+.info ul{padding-left:20px}
+.info a{color:var(--ink)}
+.info .upd{color:var(--muted);font-size:13px;margin:0 0 24px}
+.info .company{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.7}

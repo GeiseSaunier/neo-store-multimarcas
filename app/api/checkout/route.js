@@ -1,11 +1,19 @@
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { createPixPayment, createPreference } from '@/lib/mercadopago';
 import { quoteCorreios } from '@/lib/shipping';
-import { notifyNewOrder } from '@/lib/email';
+import { notifyNewOrder, notifyOrderCreated } from '@/lib/email';
 import { json, fail, siteUrl } from '@/lib/api';
 import { onlyDigits, round2 } from '@/lib/format';
 import { STORE } from '@/lib/config';
+import { tooMany } from '@/lib/ratelimit';
+import { expireStaleOrders, stockMessage } from '@/lib/orders';
 export const dynamic = 'force-dynamic';
+
+// Quantas peças ainda há para um tamanho (null = estoque não controlado).
+function available(p, size) {
+  if (p.size_stock) return Number(p.size_stock[size] ?? 0);
+  return p.stock;
+}
 
 function validCpf(cpf) {
   const c = onlyDigits(cpf);
@@ -20,6 +28,7 @@ function validCpf(cpf) {
 }
 
 export async function POST(req) {
+  if (tooMany(req, 'checkout', 8, 10 * 60e3)) return fail('Muitas tentativas seguidas. Aguarde alguns minutos ou fale com a gente pelo WhatsApp.', 429);
   let body;
   try { body = await req.json(); } catch { return fail('Dados inválidos.'); }
   const { customer = {}, address = {}, items = [], shipping, coupon, payment } = body;
@@ -43,6 +52,14 @@ export async function POST(req) {
 
   const db = supabaseAdmin();
   try {
+    // Libera o estoque de pedidos abandonados antes de conferir a disponibilidade.
+    await expireStaleOrders(db).catch((e) => console.error(e));
+
+    // Evita pedidos em série (robôs ou cliques repetidos) para o mesmo CPF.
+    const { count: open } = await db.from('orders').select('id', { count: 'exact', head: true })
+      .eq('cpf', cpf).eq('status', 'pending').gt('created_at', new Date(Date.now() - 3600e3).toISOString());
+    if (open >= 3) return fail('Você já tem pedidos aguardando pagamento. Conclua um deles ou fale com a gente pelo WhatsApp.', 429);
+
     // ---------- produtos e preços vêm do banco, nunca do navegador ----------
     const ids = [...new Set(items.map((i) => i.id))];
     const { data: prods, error: pe } = await db.from('products').select('*').in('id', ids).eq('active', true);
@@ -57,8 +74,13 @@ export async function POST(req) {
       const sizes = p.sizes?.length ? p.sizes : ['Único'];
       const size = sizes.includes(it.size) ? it.size : sizes.length === 1 ? sizes[0] : null;
       if (!size) return fail(`Escolha o tamanho de ${p.name}.`);
-      qtyById[p.id] = (qtyById[p.id] || 0) + qty;
-      if (p.stock != null && qtyById[p.id] > p.stock) return fail(`Temos só ${p.stock} unidade(s) de ${p.name}.`);
+      const key = p.size_stock ? `${p.id}|${size}` : p.id;
+      qtyById[key] = (qtyById[key] || 0) + qty;
+      const avail = available(p, size);
+      if (avail != null && qtyById[key] > avail) {
+        const what = p.size_stock && size !== 'Único' ? `${p.name} no tamanho ${size}` : p.name;
+        return fail(avail > 0 ? `Temos só ${avail} unidade(s) de ${what}.` : `${what} está esgotada. Atualize a página.`);
+      }
       lines.push({ product_id: p.id, name: p.name, brand: p.brand, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: Number(p.price), image: p.images?.[0] || null });
     }
     const subtotal = round2(lines.reduce((s, l) => s + l.unit_price * l.qty, 0));
@@ -66,8 +88,16 @@ export async function POST(req) {
     // ---------- cupom ----------
     let discount = 0, couponCode = null;
     if (coupon) {
-      const { data: c } = await db.from('coupons').select('*').eq('code', String(coupon).trim().toUpperCase()).eq('active', true).maybeSingle();
-      if (c) { couponCode = c.code; discount = round2(subtotal * Number(c.percent) / 100); }
+      // Cupom inválido não é ignorado em silêncio: a cliente precisa ver o total sem desconto antes de pagar.
+      const code = String(coupon).trim().toUpperCase();
+      const { data: c } = await db.from('coupons').select('*').eq('code', code).eq('active', true).maybeSingle();
+      if (!c) return json({ error: `O cupom ${code} não está mais disponível. Removemos o desconto; confira o novo total.`, coupon: false }, 400);
+      if (c.first_purchase) {
+        const { count: before } = await db.from('orders').select('id', { count: 'exact', head: true })
+          .eq('cpf', cpf).in('status', ['pending', 'paid', 'shipped', 'delivered']);
+        if (before > 0) return json({ error: `O cupom ${c.code} vale só na primeira compra. Removemos o desconto; confira o novo total.`, coupon: false }, 400);
+      }
+      couponCode = c.code; discount = round2(subtotal * Number(c.percent) / 100);
     }
 
     // ---------- frete ----------
@@ -98,6 +128,15 @@ export async function POST(req) {
     const { error: ie } = await db.from('order_items').insert(lines.map((l) => ({ ...l, order_id: order.id })));
     if (ie) throw ie;
 
+    // ---------- reserva as peças (no banco, à prova de duas compras ao mesmo tempo) ----------
+    const { error: re } = await db.rpc('reserve_stock', { p_order: order.id });
+    if (re) {
+      await db.from('orders').delete().eq('id', order.id);
+      const m = stockMessage(re);
+      if (m) return fail(m, 409);
+      throw re;
+    }
+
     // ---------- cria o pagamento no Mercado Pago ----------
     const url = siteUrl(req);
     let result;
@@ -119,7 +158,7 @@ export async function POST(req) {
       return fail('Não conseguimos gerar o pagamento agora. Tente novamente em instantes ou fale com a gente pelo WhatsApp.', 502);
     }
 
-    await notifyNewOrder(order, lines);
+    await Promise.all([notifyNewOrder(order, lines), notifyOrderCreated(order, lines, url)]);
     return json({ orderId: order.id, code: order.code, total, ...result });
   } catch (e) {
     console.error(e);

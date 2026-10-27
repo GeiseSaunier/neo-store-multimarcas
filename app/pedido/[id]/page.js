@@ -5,6 +5,14 @@ import { useParams } from 'next/navigation';
 import { brl } from '@/lib/format';
 import { STORE } from '@/lib/config';
 
+// A loja guarda a sacola até o pagamento ser confirmado; ao voltar do Mercado Pago com o pedido pago, esvazia.
+function clearCart(id) {
+  try {
+    if (JSON.parse(localStorage.getItem('neo-last-order')) !== id) return;
+    ['neo-cart', 'neo-coupon', 'neo-last-order'].forEach((k) => localStorage.setItem(k, k === 'neo-cart' ? '[]' : 'null'));
+  } catch {}
+}
+
 export default function OrderStatus() {
   const { id } = useParams();
   const [o, setO] = useState(null);
@@ -20,6 +28,7 @@ export default function OrderStatus() {
         if (!r.ok) throw new Error(j.error);
         setO(j);
         if (j.status === 'pending') t = setTimeout(load, 6000);
+        if (['paid', 'shipped', 'delivered'].includes(j.status)) clearCart(id);
       } catch (e) { setErr(e.message || 'Pedido não encontrado.'); }
     }
     load();

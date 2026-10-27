@@ -2,9 +2,11 @@ import { supabaseAdmin } from '@/lib/supabase-server';
 import { quoteCorreios } from '@/lib/shipping';
 import { json, fail } from '@/lib/api';
 import { onlyDigits } from '@/lib/format';
+import { tooMany } from '@/lib/ratelimit';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
+  if (tooMany(req, 'quote', 40, 10 * 60e3)) return fail('Muitas consultas. Aguarde alguns minutos.', 429);
   try {
     const { cep, items } = await req.json();
     const c = onlyDigits(cep);

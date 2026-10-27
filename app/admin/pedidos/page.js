@@ -7,7 +7,8 @@ import { STATUS, PAYMENT_LABEL } from '@/lib/config';
 import { downloadCsv } from '@/lib/csv';
 import OrderDetail from '../_components/OrderDetail';
 
-const FILTERS = [['all', 'Todos'], ['pending', 'Aguardando'], ['paid', 'Pagos'], ['shipped', 'Enviados'], ['delivered', 'Entregues'], ['cancelled', 'Cancelados']];
+const FILTERS = [['all', 'Todos'], ['pending', 'Aguardando'], ['paid', 'Pagos'], ['shipped', 'Enviados'], ['delivered', 'Entregues'], ['cancelled', 'Cancelados'], ['refunded', 'Reembolsados']];
+const PAGE = 500;
 
 function exportOrders(rows) {
   downloadCsv(`pedidos-neo-store-${new Date().toISOString().slice(0, 10)}.csv`,
@@ -23,12 +24,13 @@ function Orders() {
   const [rows, setRows] = useState(null);
   const [filter, setFilter] = useState(params.get('status') || 'all');
   const [q, setQ] = useState('');
+  const [limit, setLimit] = useState(PAGE);
   const openId = params.get('id');
 
   const load = useCallback(async () => {
-    const { data } = await sb.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }).limit(500);
+    const { data } = await sb.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }).limit(limit);
     setRows(data || []);
-  }, [sb]);
+  }, [sb, limit]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { const f = () => load(); window.addEventListener('orders-changed', f); return () => window.removeEventListener('orders-changed', f); }, [load]);
 
@@ -77,6 +79,7 @@ function Orders() {
           </table>
         </div>
       ) : <div className="empty"><span className="mono" />{rows.length ? 'Nenhum pedido com esse filtro.' : 'Os pedidos feitos na loja aparecem aqui.'}</div>}
+      {rows?.length === limit && <div style={{ textAlign: 'center', marginTop: 18 }}><button className="btn ghost" onClick={() => setLimit((l) => l + PAGE)}>Carregar pedidos mais antigos</button></div>}
       {open && <OrderDetail key={open.id} order={open} onClose={() => setOpen(null)} onSaved={load} />}
     </>
   );

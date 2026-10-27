@@ -97,8 +97,9 @@ async function nextStep(){
       customer:{nome:co.data.nome,email:co.data.email,tel:co.data.tel,cpf:co.data.cpf},
       address:{cep:co.data.cep,rua:co.data.rua,num:co.data.num,comp:co.data.comp,bairro:co.data.bairro,cidade:co.data.cidade},
       items:cart.map(i=>({id:i.id,size:i.size,color:i.col,qty:i.q})),shipping:co.ship,coupon:coupon?coupon.code:null,payment:co.pay})});
-    const j=await r.json();if(!r.ok)throw new Error(j.error||'Não foi possível finalizar o pedido.');
-    cart=[];coupon=null;save();store.set('neo-last-order',j.orderId);
+    const j=await r.json();if(!r.ok){if(j.coupon===false){coupon=null;save()}throw new Error(j.error||'Não foi possível finalizar o pedido.')}
+    // a sacola só é esvaziada quando o pagamento é confirmado
+    store.set('neo-last-order',j.orderId);
     if(j.redirect){location.href=j.redirect;return}
     co.order=j;co.step='pix';renderCo();
   }catch(e){co.err=e.message;btn.disabled=false;renderCo()}
@@ -118,7 +119,7 @@ function renderPix(){const o=co.order;
   const tick=()=>{const s=Math.max(0,Math.round((end-Date.now())/1000));const el=$('#pixT');if(!el){clearInterval(pixI);return}el.textContent=`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;if(!s){clearInterval(pixI);$('#pixWait').textContent='O código expirou. Faça o pedido novamente ou fale com a gente no WhatsApp.'}};tick();pixI=setInterval(tick,1000);
   clearInterval(pollI);pollI=setInterval(async()=>{if(!$('#pixT')){clearInterval(pollI);return}try{const r=await fetch('/api/orders/'+o.orderId);const j=await r.json();if(['paid','shipped','delivered'].includes(j.status)){clearInterval(pollI);co.step='done';renderCo()}}catch(e){}},5000);
 }
-function renderDone(){clearInterval(pixI);clearInterval(pollI);const o=co.order;const first=(co.data.nome||'').split(' ')[0];
+function renderDone(){clearInterval(pixI);clearInterval(pollI);clearPaidCart();const o=co.order;const first=(co.data.nome||'').split(' ')[0];
   $('#cBox').innerHTML=`${ICON_X}
   <div class="finish"><div class="seal"><svg viewBox="0 0 120 120"><defs><path id="c2" d="M60,60 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0"/></defs><text font-family="Montserrat,sans-serif" font-size="9" letter-spacing="4.2" fill="currentColor"><textPath href="#c2">VOLTE SEMPRE · NEO STORE · VOLTE SEMPRE · NEO STORE ·</textPath></text></svg><span class="mono"></span></div>
   <h2>Pagamento confirmado${first?', '+esc(first):''}.</h2><p>Pedido <b style="color:var(--ink)">#${o.code}</b> · total ${brl(o.total)}</p><p>Já estamos separando suas peças. Você vai receber as atualizações em ${esc(co.data.email||'seu e-mail')}.</p>

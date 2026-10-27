@@ -14,5 +14,6 @@ $('#newsForm').onsubmit=e=>{e.preventDefault();const v=$('#newsEmail').value.tri
   if(chan==='wa'&&onlyD(v).length<10){h.className='hint err';h.textContent='Digite o número com DDD, como (92) 99999-9999.';return}
   h.className='hint';h.textContent='Enviando…';
   fetch('/api/subscribers',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({channel:chan==='wa'?'whatsapp':'email',contact:v})}).then(async r=>{const j=await r.json();if(!r.ok)throw new Error(j.error);
-    h.className='hint ok';h.textContent=chan==='wa'?'Pronto! Você vai receber as novidades no WhatsApp. Use o cupom BEMVINDA na primeira compra.':'Inscrição feita. Use o cupom BEMVINDA na sua primeira compra.';$('#newsEmail').value=''})
+    const ok=chan==='wa'?'Pronto! Você vai receber as novidades no WhatsApp.':'Inscrição feita.';h.className='hint ok';h.textContent=ok;$('#newsEmail').value='';
+    fetch('/api/coupons?code='+WELCOME_COUPON).then(r=>r.json()).then(c=>{if(c.valid)h.textContent=`${ok} Use o cupom ${c.code} na sua primeira compra.`}).catch(()=>{})})
   .catch(err=>{h.className='hint err';h.textContent=err.message||'Não foi possível concluir a inscrição. Tente de novo.'})};

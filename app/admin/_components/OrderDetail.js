@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAdmin } from '../_ctx';
 import { brl, fmtDateTime, onlyDigits } from '@/lib/format';
-import { STATUS, PAYMENT_LABEL, BRANDS, SUBS } from '@/lib/config';
+import { STATUS, PAYMENT_LABEL, BRANDS, SUBS, NEXT_STATUS } from '@/lib/config';
 
 const fmtPhone = (v) => { const d = onlyDigits(v); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : v; };
 
@@ -18,27 +18,34 @@ export default function OrderDetail({ order, onClose, onSaved }) {
     if (!order.seen) sb.from('orders').update({ seen: true }).eq('id', order.id).then(() => refreshUnseen());
   }, [order.id, order.seen, sb, refreshUnseen]);
 
+  // Salva pelo servidor, que também envia os e-mails para a cliente.
+  async function save(status) {
+    const r = await fetch(`/api/admin/orders/${order.id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ status, tracking_code: tracking, notes }),
+    }).catch(() => null);
+    const j = r ? await r.json().catch(() => ({})) : {};
+    return r?.ok ? null : j.error || 'Não foi possível salvar. Confira a internet e tente de novo.';
+  }
   async function setStatus(status) {
-    if (status === 'cancelled' && !confirm(`Cancelar o pedido #${order.code}? Se ele já foi pago, faça o reembolso pelo Mercado Pago.`)) return;
+    if (status === 'cancelled' && !confirm(`Cancelar o pedido #${order.code}? As peças voltam para o estoque. Se ele já foi pago, faça o reembolso pelo Mercado Pago.`)) return;
+    if (status === 'paid' && !confirm(`Marcar o pedido #${order.code} como pago? Use só se você conferiu o pagamento. A cliente recebe o e-mail de confirmação.`)) return;
     setBusy(status); setMsg('');
-    const upd = { status, tracking_code: tracking || null, notes: notes || null };
-    if (status === 'paid' && !order.paid_at) upd.paid_at = new Date().toISOString();
-    const { error } = await sb.from('orders').update(upd).eq('id', order.id);
-    if (error) { setMsg('Não foi possível atualizar o pedido.'); setBusy(''); return; }
-    if (['shipped', 'delivered'].includes(status)) {
-      fetch('/api/admin/notify', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ orderId: order.id }) }).catch(() => {});
-    }
-    setBusy(''); setMsg(`Pedido marcado como ${STATUS[status].label.toLowerCase()}.`); onSaved();
+    const err = await save(status);
+    setBusy('');
+    if (err) { setMsg(err); return; }
+    setMsg(`Pedido marcado como ${STATUS[status].label.toLowerCase()}.`); onSaved();
   }
   async function saveNotes() {
     setBusy('notes');
-    const { error } = await sb.from('orders').update({ tracking_code: tracking || null, notes: notes || null }).eq('id', order.id);
-    setBusy(''); setMsg(error ? 'Não foi possível salvar.' : 'Anotações salvas.'); if (!error) onSaved();
+    const err = await save();
+    setBusy(''); setMsg(err || 'Anotações salvas.'); if (!err) onSaved();
   }
 
   const a = order.address || {};
   const wa = `https://wa.me/55${onlyDigits(order.phone)}?text=${encodeURIComponent(`Olá, ${order.customer_name.split(' ')[0]}! Aqui é da Neo Store, sobre o seu pedido #${order.code}.`)}`;
-  const next = { pending: ['paid', 'cancelled'], paid: ['shipped', 'cancelled'], shipped: ['delivered'], delivered: [], cancelled: ['pending'], refunded: [] }[order.status];
+  const next = NEXT_STATUS[order.status];
   const btnLabel = { paid: 'Marcar como pago', shipped: 'Marcar como enviado', delivered: 'Marcar como entregue', cancelled: 'Cancelar pedido', pending: 'Reabrir pedido' };
 
   return (
