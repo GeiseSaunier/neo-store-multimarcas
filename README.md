@@ -141,6 +141,7 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 
 - **Cadastrar peça:** Painel > Produtos > Nova peça. Fotos tiradas no celular são reduzidas automaticamente.
 - **Tirar uma peça da loja sem apagar:** desligue **Mostrar na loja**.
+- **Fotos:** ao excluir uma peça ou remover uma foto, o arquivo é apagado do Supabase na rotina diária, depois de 24 h, e só se nenhuma peça e nenhum pedido usar aquela foto (pedidos antigos continuam com as miniaturas).
 - **Peça esgotada:** coloque estoque 0. Com estoque preenchido, as peças ficam reservadas assim que o pedido é feito e voltam ao estoque se o pedido for cancelado ou o pagamento não for concluído no prazo (PIX: 30 min; cartão: 48 h; boleto: 5 dias).
 - **Calçados e peças com tamanhos:** o estoque é preenchido por tamanho na tela da peça.
 - **Pedido novo:** aparece com som e aviso no canto da tela. Para receber aviso mesmo com o painel em outra aba, clique no sininho e em **Ativar**.
@@ -191,7 +192,7 @@ neo-store/
 │       ├── subscribers/             POST cadastro de novidades
 │       ├── webhooks/mercadopago/    POST confirmação de pagamento do Mercado Pago
 │       ├── admin/orders/[id]/       POST muda status/rastreio do pedido e envia e-mails (só administradores)
-│       └── cron/expire-orders/      GET  cancela pedidos abandonados (Vercel Cron, diário)
+│       └── cron/expire-orders/      GET  cancela pedidos abandonados e apaga fotos sem uso (Vercel Cron, diário)
 │   ├── (info)/                      Trocas, pagamentos e privacidade (dados da empresa em lib/config.js)
 │   ├── robots.js, sitemap.js        Indexação no Google
 ├── lib/
@@ -205,6 +206,7 @@ neo-store/
 │   ├── api.js                       Respostas padrão das rotas
 │   ├── admin.js                     Confere se quem chamou é administrador
 │   ├── orders.js                    Expiração de pedidos e mensagens de estoque
+│   ├── photos.js                    Limpeza segura das fotos sem uso no Storage
 │   ├── ratelimit.js                 Limite de tentativas por IP (no banco, função rate_hit)
 │   ├── csv.js                       Exportação de planilhas
 │   └── image.js                     Redução de fotos antes do envio
