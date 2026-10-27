@@ -11,7 +11,7 @@ const WELCOME_COUPON='BEMVINDA';
 /* PIX direto na conta da loja (confirmação manual). Manter igual a PIX em lib/config.js. */
 const PIX={direct:true,keyLabel:'32.315.010/0001-02',keyType:'CNPJ',name:'Vanessa Neo Gomes',bank:'Nubank'};
 /* Dados da empresa no rodapé. Manter igual a LEGAL em lib/config.js. */
-const LEGAL={company:'Neo Store Multimarcas',cnpj:'32.315.010/0001-02',address:'[Rua, número, bairro, Parintins/AM, CEP]',email:'contato@neostore.com.br',instagram:'https://www.instagram.com/[usuario]'};
+const LEGAL={company:'Neo Store Multimarcas',cnpj:'32.315.010/0001-02',cities:'Maués e Parintins - AM',email:'contato@neostore.com.br',instagram:'https://www.instagram.com/[usuario]'};
 const menuBrands=()=>Object.entries(BRANDS).filter(([,b])=>b.menu!==false);
 const brandOf=p=>p.b==='outras'&&p.bl?p.bl:BRANDS[p.b].n;
 const label=p=>`${brandOf(p)} · ${SUBS[p.c]}`;

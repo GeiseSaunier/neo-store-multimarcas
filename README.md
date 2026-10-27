@@ -116,7 +116,7 @@ E-mails enviados:
 
 ## 6. Dados da empresa e textos legais
 
-Antes de abrir a loja, preencha os dados da empresa (razão social, CNPJ, endereço, e-mail e Instagram) em **dois arquivos**: `lib/config.js` (objeto `LEGAL`) e `public/loja/js/config.js` (objeto `LEGAL`). Eles aparecem no rodapé da loja e nas páginas de informação.
+Antes de abrir a loja, confira os dados da empresa (nome, CNPJ, cidades, e-mail e Instagram) em **dois arquivos**: `lib/config.js` (objeto `LEGAL`) e `public/loja/js/config.js` (objeto `LEGAL`). Eles aparecem no rodapé da loja e nas páginas de informação.
 
 Depois revise os trechos marcados com `[PREENCHER]` e `[DATA]` em:
 - `app/(info)/trocas/page.js` (Trocas e devoluções)

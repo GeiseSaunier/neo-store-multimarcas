@@ -2,7 +2,7 @@
    Carrega produtos e entregas da API e desenha a página. */
 /* init */
 $('#grid').innerHTML='<div class="empty">Carregando peças…</div>';
-$('#legalLine').textContent=`${LEGAL.company} · CNPJ ${LEGAL.cnpj} · ${LEGAL.address}`;
+$('#legalLine').textContent=`${LEGAL.company} · CNPJ ${LEGAL.cnpj} · ${LEGAL.cities}`;
 $('#igLink').href=LEGAL.instagram;$('#mailLink').href='mailto:'+LEGAL.email;$('#mailLink').textContent=LEGAL.email;
 renderTabs();updateBadges();
 (async()=>{
