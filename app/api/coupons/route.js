@@ -4,7 +4,7 @@ import { tooMany } from '@/lib/ratelimit';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req) {
-  if (tooMany(req, 'coupon', 20, 10 * 60e3)) return fail('Muitas tentativas. Aguarde alguns minutos.', 429);
+  if (await tooMany(req, 'coupon', 20, 10 * 60e3)) return fail('Muitas tentativas. Aguarde alguns minutos.', 429);
   const code = (new URL(req.url).searchParams.get('code') || '').trim().toUpperCase();
   if (!code) return json({ valid: false });
   const { data } = await supabaseAdmin().from('coupons').select('code,percent,first_purchase').eq('code', code).eq('active', true).maybeSingle();

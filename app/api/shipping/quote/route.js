@@ -6,7 +6,7 @@ import { tooMany } from '@/lib/ratelimit';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
-  if (tooMany(req, 'quote', 40, 10 * 60e3)) return fail('Muitas consultas. Aguarde alguns minutos.', 429);
+  if (await tooMany(req, 'quote', 40, 10 * 60e3)) return fail('Muitas consultas. Aguarde alguns minutos.', 429);
   try {
     const { cep, items } = await req.json();
     const c = onlyDigits(cep);

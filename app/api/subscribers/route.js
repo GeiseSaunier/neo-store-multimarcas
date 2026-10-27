@@ -5,7 +5,7 @@ import { tooMany } from '@/lib/ratelimit';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
-  if (tooMany(req, 'subscribe', 5, 10 * 60e3)) return fail('Muitas tentativas. Aguarde alguns minutos.', 429);
+  if (await tooMany(req, 'subscribe', 5, 10 * 60e3)) return fail('Muitas tentativas. Aguarde alguns minutos.', 429);
   try {
     const { channel, contact } = await req.json();
     let value = String(contact || '').trim();

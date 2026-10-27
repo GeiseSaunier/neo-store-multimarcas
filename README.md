@@ -15,7 +15,8 @@ Siga os passos na ordem. Leva cerca de uma hora na primeira vez.
 1. Crie uma conta em **supabase.com** e clique em **New project**. Escolha a região **São Paulo** e guarde a senha do banco.
 2. No menu lateral, abra **SQL Editor > New query**.
 3. Abra o arquivo `supabase/schema.sql` deste projeto, copie todo o conteúdo, cole no editor e clique em **Run**.
-   Isso cria as tabelas, as regras de segurança, o espaço das fotos, as opções de entrega, os cupons NEO10 e BEMVINDA e as 6 bolsas atuais.
+   Isso cria as tabelas, as regras de segurança, o espaço das fotos, as opções de entrega, o cupom BEMVINDA (só na primeira compra) e as 6 bolsas atuais.
+   Se o banco já tinha sido criado com uma versão anterior, apague o cupom **NEO10** em Painel > Cupons (ele não deve mais existir).
 4. Abra **Project Settings > API** e anote três valores:
    - **Project URL**
    - **anon public** (chave pública)
@@ -154,6 +155,7 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 
 Next.js 16 (App Router), Supabase e Mercado Pago, pronta para a Vercel.
 
+- **Testes automáticos:** `npm test` (Node 22 ou mais novo). Testam o estoque, os cupons e o limite de tentativas direto no `supabase/schema.sql` (num Postgres em memória, sem precisar do Supabase) e as funções de `lib/`. Rodam sozinhos no GitHub a cada envio (`.github/workflows/testes.yml`).
 - **Rodar no computador:** `cp .env.example .env.local`, preencha as chaves, depois `npm install` e `npm run dev`. A loja abre em `http://localhost:3000` e o painel em `/admin`.
 
 ### Estrutura
@@ -203,7 +205,7 @@ neo-store/
 │   ├── api.js                       Respostas padrão das rotas
 │   ├── admin.js                     Confere se quem chamou é administrador
 │   ├── orders.js                    Expiração de pedidos e mensagens de estoque
-│   ├── ratelimit.js                 Limite de tentativas por IP
+│   ├── ratelimit.js                 Limite de tentativas por IP (no banco, função rate_hit)
 │   ├── csv.js                       Exportação de planilhas
 │   └── image.js                     Redução de fotos antes do envio
 ├── public/
@@ -230,7 +232,9 @@ neo-store/
 │   ├── brand/                       Monograma, logotipo e padrão da marca
 │   └── seed/                        Fotos das 6 peças iniciais
 ├── supabase/schema.sql              Tabelas, regras de acesso, fotos e dados iniciais
-├── next.config.mjs                  "/" → loja.html e noindex no painel
+├── scripts/og-tags.mjs              Na Vercel, põe o endereço completo na imagem de prévia do link
+├── tests/                           Testes automáticos (npm test)
+├── next.config.mjs                  "/" → loja.html, noindex no painel e cabeçalhos de segurança
 └── .env.example                     Variáveis de ambiente
 ```
 
@@ -259,6 +263,10 @@ neo-store/
 4. O painel recebe a mudança na hora pelo Supabase Realtime (som, aviso na tela e sininho).
 
 ### Regras importantes
+
+- **Alertas:** falhas no checkout, no webhook e na rotina diária mandam e-mail para `ADMIN_NOTIFY_EMAILS` (no máximo um a cada 15 minutos por tipo). Se um pagamento chega depois de a peça ter sido vendida para outra cliente, o pedido fica marcado **Sem estoque** no painel e o e-mail de pagamento avisa.
+- **Estoque no painel:** se o estoque de uma peça mudar enquanto a tela está aberta (uma venda, por exemplo), o painel não grava o número antigo: avisa e mostra o valor novo.
+- **Limite de tentativas:** fica no banco e vale para todos os servidores. Para proteção extra contra ataques grandes, ligue o Firewall da Vercel (Settings > Firewall > Rate Limiting).
 
 - A chave `SUPABASE_SERVICE_ROLE_KEY` e o token do Mercado Pago **só existem no servidor**. Nunca use em `public/` nem em arquivos com `'use client'`.
 - Preço, cupom e frete **sempre** são recalculados no servidor. O navegador só envia ids, tamanhos e quantidades.

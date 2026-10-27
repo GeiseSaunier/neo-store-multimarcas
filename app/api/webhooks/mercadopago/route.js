@@ -1,6 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { getPayment, validSignature } from '@/lib/mercadopago';
-import { notifyPaid } from '@/lib/email';
+import { notifyPaid, notifyError } from '@/lib/email';
 import { json } from '@/lib/api';
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export async function POST(req) {
     const amountOk = Math.abs(Number(pay.transaction_amount) - Number(order.total)) < 0.01;
     if (pay.status === 'approved' && !amountOk) {
       if (order.status === 'pending' && !(order.notes || '').includes('Atenção: o Mercado Pago aprovou')) upd.notes = `${order.notes ? order.notes + '\n' : ''}Atenção: o Mercado Pago aprovou ${pay.transaction_amount}, diferente do total do pedido. Confira antes de enviar.`;
-      console.error('webhook: valor divergente', orderId, pay.transaction_amount, order.total);
+      await notifyError('webhook: valor pago diferente do pedido', new Error(`Pedido #${order.code}: pago ${pay.transaction_amount}, total ${order.total}`), 'O pedido não foi marcado como pago. Confira no Mercado Pago.');
     } else if (pay.status === 'approved' && ['pending', 'cancelled'].includes(order.status)) {
       // O banco reserva o estoque de novo se o pedido tinha sido cancelado por falta de pagamento.
       Object.assign(upd, { status: 'paid', paid_at: new Date().toISOString(), seen: false });
@@ -38,16 +38,17 @@ export async function POST(req) {
     } else if (pay.status === 'cancelled' && order.status === 'pending') {
       upd.status = 'cancelled';
     }
-    const { error: ue } = await db.from('orders').update(upd).eq('id', orderId);
+    // O banco preenche stock_issue se a peça já tinha sido vendida para outra cliente.
+    const { data: saved, error: ue } = await db.from('orders').update(upd).eq('id', orderId).select().single();
     if (ue) throw ue;
 
     if (becamePaid) {
       const { data: items } = await db.from('order_items').select('*').eq('order_id', orderId);
-      await notifyPaid({ ...order, ...upd }, items || []);
+      await notifyPaid(saved, items || []);
     }
     return json({ ok: true });
   } catch (e) {
-    console.error('webhook', e);
+    await notifyError('webhook do Mercado Pago', e, 'Os pagamentos podem não estar sendo confirmados automaticamente.');
     // 500 faz o Mercado Pago tentar de novo mais tarde.
     return json({ error: 'erro ao processar' }, 500);
   }

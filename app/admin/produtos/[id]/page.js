@@ -10,6 +10,15 @@ import Chips from '../../_components/Chips';
 const EMPTY = { name: '', brand: 'capodarte', category: 'bolsas', price: '', old_price: '', description: '', details: '', sizes: ['Único'], colors: [], images: [], stock: '', size_stock: {}, active: true, position: 0 };
 const SIZE_PRESETS = [['Único', ['Único']], ['33 ao 39', ['33', '34', '35', '36', '37', '38', '39']], ['PP ao GG', ['PP', 'P', 'M', 'G', 'GG']]];
 
+// Linha do banco → campos do formulário.
+const toForm = (data) => ({
+  ...data, price: String(data.price), old_price: data.old_price ? String(data.old_price) : '', details: (data.details || []).join('\n'),
+  stock: data.stock == null ? '' : String(data.stock), sizes: data.sizes?.length ? data.sizes : ['Único'],
+  size_stock: Object.fromEntries(Object.entries(data.size_stock || {}).map(([k, v]) => [k, String(v)])),
+});
+// Resumo do estoque no formulário, para saber se foi editado.
+const stockKey = (f) => JSON.stringify([f.sizes, String(f.stock ?? ''), f.size_stock]);
+
 export default function ProductForm() {
   const { sb } = useAdmin();
   const { id } = useParams();
@@ -21,12 +30,15 @@ export default function ProductForm() {
   const [drag, setDrag] = useState(false);
   const fileRef = useRef();
 
+  // Estoque como estava ao abrir a tela: serve para saber se ele foi editado aqui.
+  const [origStock, setOrigStock] = useState(null);
+
   useEffect(() => {
     if (isNew) return;
     sb.from('products').select('*').eq('id', id).maybeSingle().then(({ data }) => {
       if (!data) { setMsg({ t: 'Peça não encontrada.' }); return; }
-      setF({ ...data, price: String(data.price), old_price: data.old_price ? String(data.old_price) : '', details: (data.details || []).join('\n'), stock: data.stock ?? '', sizes: data.sizes?.length ? data.sizes : ['Único'],
-        size_stock: Object.fromEntries(Object.entries(data.size_stock || {}).map(([k, v]) => [k, String(v)])) });
+      const form = toForm(data);
+      setF(form); setOrigStock(stockKey(form));
     });
   }, [id, isNew, sb]);
 
@@ -71,11 +83,33 @@ export default function ProductForm() {
       size_stock: bySize ? Object.fromEntries(sizes.map((s) => [s, Math.max(0, parseInt(f.size_stock[s], 10) || 0)])) : null,
       stock: multi || f.stock === '' ? null : Math.max(0, parseInt(f.stock, 10) || 0), active: f.active, position: Number(f.position) || 0,
     };
-    const { data, error } = isNew ? await sb.from('products').insert(row).select().single() : await sb.from('products').update(row).eq('id', id).select().single();
+    if (isNew) {
+      const { data, error } = await sb.from('products').insert(row).select().single();
+      setBusy('');
+      if (error) return setMsg({ t: 'Não foi possível salvar. Confira os campos e tente de novo.' });
+      return router.replace(`/admin/produtos/${data.id}?salvo=1`);
+    }
+    // Vendas mexem no estoque enquanto a tela está aberta. Se o estoque não foi editado aqui,
+    // ele não é enviado (para não gravar um número antigo). Se foi, só salva se ninguém
+    // mexeu na peça desde que a tela foi aberta.
+    const stockEdited = stockKey(f) !== origStock;
+    let q = sb.from('products');
+    if (stockEdited) q = q.update(row).eq('id', id).eq('updated_at', f.updated_at);
+    else { const { stock, size_stock, ...rest } = row; q = q.update(rest).eq('id', id); }
+    const { data, error } = await q.select();
     setBusy('');
     if (error) return setMsg({ t: 'Não foi possível salvar. Confira os campos e tente de novo.' });
-    if (isNew) router.replace(`/admin/produtos/${data.id}?salvo=1`);
-    else setMsg({ t: 'Alterações salvas. A loja já mostra a versão nova.', ok: true });
+    if (!data.length) {
+      const { data: fresh } = await sb.from('products').select('*').eq('id', id).maybeSingle();
+      if (!fresh) return setMsg({ t: 'Esta peça foi excluída por outra pessoa.' });
+      const ff = toForm(fresh);
+      setF((s) => ({ ...s, sizes: ff.sizes, stock: ff.stock, size_stock: ff.size_stock, updated_at: ff.updated_at }));
+      setOrigStock(stockKey(ff));
+      return setMsg({ t: 'O estoque desta peça mudou enquanto você editava (houve uma venda ou outra pessoa salvou). Atualizamos os números na tela: confira o estoque e salve de novo.' });
+    }
+    const saved = toForm(data[0]);
+    setF(saved); setOrigStock(stockKey(saved));
+    setMsg({ t: 'Alterações salvas. A loja já mostra a versão nova.', ok: true });
   }
   async function remove() {
     if (!confirm(`Excluir “${f.name}”? Pedidos antigos continuam guardados. Se quiser só tirar da loja, desligue “Mostrar na loja”.`)) return;

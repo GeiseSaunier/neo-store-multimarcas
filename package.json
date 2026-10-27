@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "node scripts/og-tags.mjs && next build",
+    "start": "next start",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --conditions=react-server --test tests/estoque.test.mjs tests/cupons-e-limites.test.mjs tests/utilitarios.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",
@@ -15,6 +16,9 @@
     "server-only": "^0.0.1"
   },
   "engines": {
-    "node": ">=20.9"
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
   }
 }

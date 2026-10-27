@@ -1,9 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase-server';
 import { createPixPayment, createPreference } from '@/lib/mercadopago';
 import { quoteCorreios } from '@/lib/shipping';
-import { notifyNewOrder, notifyOrderCreated } from '@/lib/email';
+import { notifyNewOrder, notifyOrderCreated, notifyError } from '@/lib/email';
 import { json, fail, siteUrl } from '@/lib/api';
-import { onlyDigits, round2 } from '@/lib/format';
+import { onlyDigits, round2, validCpf } from '@/lib/format';
 import { STORE } from '@/lib/config';
 import { tooMany } from '@/lib/ratelimit';
 import { expireStaleOrders, stockMessage } from '@/lib/orders';
@@ -15,20 +15,8 @@ function available(p, size) {
   return p.stock;
 }
 
-function validCpf(cpf) {
-  const c = onlyDigits(cpf);
-  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
-  const dv = (len) => {
-    let s = 0;
-    for (let i = 0; i < len; i++) s += Number(c[i]) * (len + 1 - i);
-    const r = (s * 10) % 11;
-    return r === 10 ? 0 : r;
-  };
-  return dv(9) === Number(c[9]) && dv(10) === Number(c[10]);
-}
-
 export async function POST(req) {
-  if (tooMany(req, 'checkout', 8, 10 * 60e3)) return fail('Muitas tentativas seguidas. Aguarde alguns minutos ou fale com a gente pelo WhatsApp.', 429);
+  if (await tooMany(req, 'checkout', 8, 10 * 60e3)) return fail('Muitas tentativas seguidas. Aguarde alguns minutos ou fale com a gente pelo WhatsApp.', 429);
   let body;
   try { body = await req.json(); } catch { return fail('Dados inválidos.'); }
   const { customer = {}, address = {}, items = [], shipping, coupon, payment } = body;
@@ -153,7 +141,7 @@ export async function POST(req) {
         result = { payment, redirect: pref.init_point };
       }
     } catch (e) {
-      console.error(e);
+      await notifyError('checkout: Mercado Pago não gerou o pagamento', e, `Pedido #${order.code} foi cancelado automaticamente.`);
       await db.from('orders').update({ status: 'cancelled', notes: `Falha ao gerar pagamento: ${e.message}` }).eq('id', order.id);
       return fail('Não conseguimos gerar o pagamento agora. Tente novamente em instantes ou fale com a gente pelo WhatsApp.', 502);
     }
@@ -161,7 +149,7 @@ export async function POST(req) {
     await Promise.all([notifyNewOrder(order, lines), notifyOrderCreated(order, lines, url)]);
     return json({ orderId: order.id, code: order.code, total, ...result });
   } catch (e) {
-    console.error(e);
+    await notifyError('checkout: erro ao finalizar pedido', e);
     return fail('Não foi possível finalizar o pedido. Tente novamente.', 500);
   }
 }

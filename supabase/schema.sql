@@ -142,6 +142,9 @@ alter table public.products add column if not exists size_stock jsonb;
 alter table public.orders add column if not exists stock_reserved boolean not null default false;
 -- Pedidos pagos antes desta versão já tinham baixado o estoque.
 update public.orders set stock_reserved = true where status in ('paid','shipped','delivered') and not stock_reserved;
+-- Peças que faltaram quando um pagamento chegou depois de a peça ter sido vendida para outra cliente.
+-- Aparece como alerta no painel; vazio = tudo certo.
+alter table public.orders add column if not exists stock_issue text;
 
 -- Com estoque por tamanho, a coluna stock guarda a soma (para "Esgotado" e para o painel).
 create or replace function public.products_sum_stock() returns trigger language plpgsql as $$
@@ -158,9 +161,11 @@ create trigger products_sum_stock before insert or update on public.products for
 
 -- Tira (p_dir = -1) ou devolve (p_dir = 1) as peças de um pedido.
 -- Sem p_force, falha com 'ESTOQUE|nome|tamanho|disponível' se faltar peça.
-create or replace function public.apply_stock(p_order uuid, p_dir int, p_force boolean) returns void
+-- Com p_force (pagamento confirmado), nunca falha: devolve a lista do que faltou, ou null.
+drop function if exists public.apply_stock(uuid, int, boolean);
+create function public.apply_stock(p_order uuid, p_dir int, p_force boolean) returns text
 language plpgsql security definer set search_path = public as $$
-declare r record; p record; avail int;
+declare r record; p record; avail int; missing text[] := '{}';
 begin
   for r in select product_id, coalesce(size, 'Único') size, sum(qty)::int q from public.order_items
             where order_id = p_order and product_id is not null
@@ -169,13 +174,20 @@ begin
     if not found then continue; end if;
     if p.size_stock is not null then
       avail := coalesce((p.size_stock ->> r.size)::int, 0);
-      if p_dir < 0 and not p_force and avail < r.q then raise exception 'ESTOQUE|%|%|%', p.name, r.size, avail; end if;
+      if p_dir < 0 and avail < r.q then
+        if not p_force then raise exception 'ESTOQUE|%|%|%', p.name, r.size, avail; end if;
+        missing := missing || format('%s (tam. %s): faltou %s', p.name, r.size, r.q - avail);
+      end if;
       update public.products set size_stock = jsonb_set(size_stock, array[r.size], to_jsonb(greatest(0, avail + p_dir * r.q))) where id = p.id;
     elsif p.stock is not null then
-      if p_dir < 0 and not p_force and p.stock < r.q then raise exception 'ESTOQUE|%||%', p.name, p.stock; end if;
+      if p_dir < 0 and p.stock < r.q then
+        if not p_force then raise exception 'ESTOQUE|%||%', p.name, p.stock; end if;
+        missing := missing || format('%s: faltou %s', p.name, r.q - p.stock);
+      end if;
       update public.products set stock = greatest(0, stock + p_dir * r.q) where id = p.id;
     end if;
   end loop;
+  return nullif(array_to_string(missing, '; '), '');
 end; $$;
 
 -- Reserva o estoque de um pedido recém-criado (chamado pelo checkout).
@@ -194,16 +206,41 @@ language plpgsql security definer set search_path = public as $$
 begin
   if new.status is not distinct from old.status then return new; end if;
   if new.status in ('pending','paid') and not new.stock_reserved then
-    perform public.apply_stock(new.id, -1, new.status = 'paid');
+    new.stock_issue := public.apply_stock(new.id, -1, new.status = 'paid');
     new.stock_reserved := true;
   elsif new.stock_reserved and (new.status = 'cancelled' or (new.status = 'refunded' and old.status in ('pending','paid'))) then
-    perform public.apply_stock(new.id, 1, false);
+    -- só devolve o que de fato saiu: com peça faltando, o estoque já tinha ficado em 0
+    if new.stock_issue is null then perform public.apply_stock(new.id, 1, false); end if;
     new.stock_reserved := false;
+    new.stock_issue := null;
   end if;
   return new;
 end; $$;
 drop trigger if exists orders_stock on public.orders;
 create trigger orders_stock before update of status on public.orders for each row execute function public.orders_stock_on_status();
+
+-- ---------- Limite de tentativas (checkout, cupons, frete, novidades) ----------
+-- Guardado no banco para valer em todos os servidores da Vercel ao mesmo tempo.
+create table if not exists public.rate_hits (
+  key text primary key,
+  count integer not null,
+  reset_at timestamptz not null
+);
+alter table public.rate_hits enable row level security; -- sem regras: só o servidor (service_role) acessa
+
+-- Conta mais uma tentativa e diz se passou do limite na janela de p_window segundos.
+create or replace function public.rate_hit(p_key text, p_max int, p_window int) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare c int;
+begin
+  insert into public.rate_hits as h (key, count, reset_at) values (p_key, 1, now() + make_interval(secs => p_window))
+  on conflict (key) do update set
+    count = case when h.reset_at < now() then 1 else h.count + 1 end,
+    reset_at = case when h.reset_at < now() then now() + make_interval(secs => p_window) else h.reset_at end
+  returning h.count into c;
+  return c > p_max;
+end; $$;
+revoke execute on function public.rate_hit(text, int, int) from public, anon, authenticated;
 
 drop function if exists public.decrement_stock(uuid);
 revoke execute on function public.apply_stock(uuid, int, boolean) from public, anon, authenticated;
@@ -271,8 +308,8 @@ insert into public.shipping_options (id, name, description, price, price_label, 
   ('barco','Entrega no barco, rodoviária ou táxi','Outros municípios · combinamos os dados pelo WhatsApp',20,null,false,4)
 on conflict (id) do nothing;
 
--- Cupons de exemplo: confirme com a loja antes de abrir para clientes (ou desative no painel).
-insert into public.coupons (code, percent, first_purchase) values ('NEO10',10,false),('BEMVINDA',10,true)
+-- Cupom de boas-vindas: vale só na primeira compra de cada CPF.
+insert into public.coupons (code, percent, first_purchase) values ('BEMVINDA',10,true)
 on conflict (code) do nothing;
 
 insert into public.products (name, brand, category, price, description, details, colors, images, position)

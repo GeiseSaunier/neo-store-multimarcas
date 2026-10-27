@@ -57,6 +57,12 @@ export default function OrderDetail({ order, onClose, onSaved }) {
           <button className="icon-btn" aria-label="Fechar" onClick={onClose}><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
         </div>
         <div className="body">
+          {order.stock_issue && (
+            <div className="alert" role="alert">
+              <b>Estoque insuficiente.</b> O pagamento chegou depois de a peça ter sido vendida para outra cliente: {order.stock_issue}.
+              Fale com a cliente para oferecer outra peça ou o reembolso pelo Mercado Pago. Se cancelar, ajuste o estoque da peça manualmente.
+            </div>
+          )}
           <section>
             <h3>Peças</h3>
             {(order.order_items || []).map((i) => (

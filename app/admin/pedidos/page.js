@@ -71,7 +71,7 @@ function Orders() {
                   <td>{o.customer_name}<div className="muted" style={{ fontSize: 12 }}>{o.address?.cidade}</div></td>
                   <td>{o.shipping_label.replace(/ \(via Melhor Envio\)/, '')}</td>
                   <td>{PAYMENT_LABEL[o.payment_method]}</td>
-                  <td><span className={`badge ${STATUS[o.status].tone}`}>{STATUS[o.status].label}</span></td>
+                  <td><span className={`badge ${STATUS[o.status].tone}`}>{STATUS[o.status].label}</span>{o.stock_issue && <span className="badge bad" title={o.stock_issue} style={{ marginLeft: 6 }}>Sem estoque</span>}</td>
                   <td className="num">{brl(o.total)}</td>
                 </tr>
               ))}
