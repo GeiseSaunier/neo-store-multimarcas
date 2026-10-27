@@ -119,8 +119,8 @@ E-mails enviados:
 Antes de abrir a loja, confira os dados da empresa (nome, CNPJ, cidades, e-mail e Instagram) em **dois arquivos**: `lib/config.js` (objeto `LEGAL`) e `public/loja/js/config.js` (objeto `LEGAL`). Eles aparecem no rodapé da loja e nas páginas de informação.
 
 Depois revise os trechos marcados com `[PREENCHER]` e `[DATA]` em:
-- `app/(info)/trocas/page.js` (Trocas e devoluções)
-- `app/(info)/privacidade/page.js` (Política de privacidade)
+- `content/trocas.md` (Trocas e devoluções)
+- `content/privacidade.md` (Política de privacidade)
 - `app/(info)/pagamentos/page.js` (Formas de pagamento)
 
 Os textos seguem o Código de Defesa do Consumidor e a LGPD, mas vale uma revisão com o contador ou advogado da loja.
@@ -258,6 +258,7 @@ neo-store/
 | Mudar cores ou fontes da loja | `public/loja/css/base.css` |
 | Mudar textos da página inicial | `public/loja.html` |
 | Mudar o texto "Atenção às entregas" | `public/loja/js/checkout.js` (função `renderCo`) |
+| Mudar o texto da política de privacidade ou de trocas | `content/privacidade.md` e `content/trocas.md` (texto simples: `#`/`##`/`###` para títulos, `- ` para listas, `**negrito**`, `[link](https://...)`; variáveis como `{{whatsapp}}` e `{{empresa}}` viram os dados da loja) |
 | Mudar os e-mails enviados | `lib/email.js` |
 | Mudar o tamanho padrão da embalagem | variáveis `PKG_*` na Vercel |
 | Cores do painel | `app/admin/styles/base.css` |

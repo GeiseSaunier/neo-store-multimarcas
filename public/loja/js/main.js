@@ -3,7 +3,7 @@
 /* init */
 $('#grid').innerHTML='<div class="empty">Carregando peças…</div>';
 $('#legalLine').textContent=`${LEGAL.company} · CNPJ ${LEGAL.cnpj} · ${LEGAL.cities}`;
-$('#igLink').href=LEGAL.instagram;$('#mailLink').href='mailto:'+LEGAL.email;$('#mailLink').textContent=LEGAL.email;
+$('#igLink').href=LEGAL.instagram;if(LEGAL.email){$('#mailLink').href='mailto:'+LEGAL.email;$('#mailLink').textContent=LEGAL.email}else $('#mailLink').parentElement.remove();
 renderTabs();updateBadges();
 (async()=>{
   try{const[pr,sr]=await Promise.all([fetch('/api/products'),fetch('/api/shipping')]);const pj=await pr.json();if(!pr.ok)throw new Error(pj.error);P=pj.products.map(mapP);if(sr.ok)SHIP=await sr.json()}

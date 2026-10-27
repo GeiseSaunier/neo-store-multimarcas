@@ -10,7 +10,7 @@ export default function InfoLayout({ children }) {
         {children}
         <div className="company">
           {LEGAL.company} · CNPJ {LEGAL.cnpj} · {LEGAL.cities}<br />
-          WhatsApp {STORE.whatsappLabel} · {LEGAL.email} · {LEGAL.hours}
+          WhatsApp {STORE.whatsappLabel}{LEGAL.email ? ` · ${LEGAL.email}` : ''} · {LEGAL.hours}
         </div>
       </article>
     </main>

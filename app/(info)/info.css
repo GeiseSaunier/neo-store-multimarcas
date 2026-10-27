@@ -12,3 +12,5 @@ body{margin:0;background:var(--sand);color:var(--text);font-family:var(--sans);-
 .info a{color:var(--ink)}
 .info .upd{color:var(--muted);font-size:13px;margin:0 0 24px}
 .info .company{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;line-height:1.7}
+.info h3{font-family:var(--serif);font-weight:500;font-size:21px;color:var(--ink);margin:24px 0 8px}
+.info ol{padding-left:22px}
