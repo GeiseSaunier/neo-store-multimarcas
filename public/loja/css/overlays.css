@@ -140,3 +140,19 @@
 .pv .pic .thumbs button[aria-pressed="true"]{border-color:var(--linen);opacity:1;box-shadow:0 0 0 1px var(--ink)}
 .pv .pic .thumbs img{position:static;width:100%;height:100%;object-fit:cover}
 .quick[disabled]{background:var(--stone);cursor:default}
+
+/* ================= Combine com (look.js) ================= */
+.look{display:grid;gap:10px;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.look .opt-label{margin:0}
+.look-item{display:grid;grid-template-columns:72px 1fr;gap:14px;align-items:start;padding:10px;border:1px solid transparent;border-radius:8px;cursor:pointer;transition:border-color .2s,background .2s}
+.look-item[aria-pressed="true"]{border-color:var(--ink);background:var(--linen)}
+.look-pic{width:72px;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:var(--tint1);display:grid;place-items:center;padding:0}
+.look-pic img{width:100%;height:100%;object-fit:cover}
+.look-info{display:grid;gap:3px;min-width:0}
+.look-info b{font-weight:500;color:var(--ink);font-size:14px}
+.look-info small{color:var(--muted);font-size:12px}
+.look-info .price{font-size:14px;color:var(--ink)}
+.look-sizes{margin-top:6px;gap:6px}
+.look-sizes .chip{min-width:38px;height:34px;padding:0 10px;font-size:12px}
+.look-drawer{margin:18px 0 8px}
+#lookAdd{white-space:nowrap}

@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "node scripts/og-tags.mjs && next build",
     "start": "next start",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --conditions=react-server --test tests/estoque.test.mjs tests/cupons-e-limites.test.mjs tests/utilitarios.test.mjs tests/fotos.test.mjs tests/marcas.test.mjs tests/pix.test.mjs tests/markdown.test.mjs"
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --conditions=react-server --test tests/estoque.test.mjs tests/cupons-e-limites.test.mjs tests/utilitarios.test.mjs tests/fotos.test.mjs tests/marcas.test.mjs tests/pix.test.mjs tests/markdown.test.mjs tests/combine.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.117.3",

@@ -1,10 +1,12 @@
 /* Neo Store · sacola
    Adicionar, remover, cupom e resumo da sacola. */
 /* ================= Cart ================= */
-function addToCart(id,size,col,qty){const p=P.find(x=>x.id===id);const r=room(p,size);
+/* quiet: não mostra o aviso de "na sacola" (usado ao adicionar bolsa + calçado juntos) */
+function addToCart(id,size,col,qty,quiet){const p=P.find(x=>x.id===id);const r=room(p,size);
   if(r<1){toast(`Não há mais unidades de ${p.n}${size!=='Único'?' no tamanho '+size:''}`);return}
   const cut=qty>r;qty=Math.min(qty,r);const k=`${id}|${size}|${col}`;const ex=cart.find(x=>x.k===k);
   if(ex)ex.q=Math.min(9,ex.q+qty);else cart.push({k,id,size,col,q:qty});save();
+  if(quiet&&!cut){updateBadges('cart',true);return}
   toast(cut?`Só havia ${qty} ${qty===1?'unidade disponível':'unidades disponíveis'} de ${p.n}`:`${p.n} na sacola`,['Ver sacola',openDrawer]);updateBadges('cart',true)}
 /* valor de uma entrega regional como a cliente vê */
 function shipPrice(o){return o.price_label?esc(o.price_label):o.to_confirm?'Consulte':o.price?brl(o.price):'Grátis'}
@@ -19,13 +21,14 @@ function renderDrawer(){const b=$('#drawerBody'),f=$('#drawerFoot');const n=cart
   const t=totals();
   b.innerHTML=`<div class="ship-bar">${[...SHIP.regional.map(o=>`${esc(o.name)} <b>${shipPrice(o)}</b>`),...(SHIP.correios?['Correios para todo o Brasil']:[])].join(' · ')}</div>`+
   cart.map(i=>{const p=P.find(x=>x.id===i.id);return`<div class="line"><div class="thumb">${pic(p)}</div><div><h4>${p.n}</h4><small>${i.size!=='Único'?'Tam. '+i.size+' · ':''}<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${i.col};vertical-align:-1px;border:1px solid var(--line)"></span></small>
-   <div class="qty"><button data-dq="${i.k}" aria-label="Diminuir">−</button><span>${i.q}</span><button data-iq="${i.k}" aria-label="Aumentar">+</button></div><button class="rm" data-rm="${i.k}">Remover</button></div><div class="price">${brl(p.p*i.q)}</div></div>`}).join('');
+   <div class="qty"><button data-dq="${i.k}" aria-label="Diminuir">−</button><span>${i.q}</span><button data-iq="${i.k}" aria-label="Aumentar">+</button></div><button class="rm" data-rm="${i.k}">Remover</button></div><div class="price">${brl(p.p*i.q)}</div></div>`}).join('')+lookDrawerHTML();
   f.innerHTML=`<div class="coupon"><input id="cpIn" placeholder="Cupom de desconto" value="${coupon?coupon.code:''}" aria-label="Cupom"><button id="cpBtn">${coupon?'Remover':'Aplicar'}</button></div><div class="hint" id="cpHint">${coupon?`<span class="hint ok">Cupom ${coupon.code} aplicado${coupon.first?' (válido só na primeira compra)':''}.</span>`:'Tem um cupom? Digite aqui.'}</div>
   <div style="margin-top:14px"><div class="sumrow"><span>Subtotal</span><span>${brl(t.sub)}</span></div>${t.disc?`<div class="sumrow"><span>Desconto</span><span class="disc">− ${brl(t.disc)}</span></div>`:''}
   <div class="sumrow total"><span>Total</span><span>${brl(t.after)}</span></div><div class="hint" style="text-align:right">${inst(t.after)} · frete calculado no próximo passo</div></div>
   <button class="btn solid block" style="margin-top:16px" id="goCheckout">Finalizar compra</button>`;
 }
 $('#drawer').addEventListener('click',e=>{const t=e.target;
+  if(lookDrawerClick(t))return;
   const d=t.closest('[data-dq]'),i=t.closest('[data-iq]'),r=t.closest('[data-rm]');
   if(d){const it=cart.find(x=>x.k===d.dataset.dq);it.q--;if(!it.q)cart=cart.filter(x=>x!==it);save()}
   if(i){const it=cart.find(x=>x.k===i.dataset.iq);if(room(P.find(x=>x.id===it.id),it.size)<1){toast('Não há mais unidades disponíveis');return}it.q=Math.min(9,it.q+1);save()}

@@ -149,6 +149,7 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 - **Fotos:** ao excluir uma peça ou remover uma foto, o arquivo é apagado do Supabase na rotina diária, depois de 24 h, e só se nenhuma peça e nenhum pedido usar aquela foto (pedidos antigos continuam com as miniaturas).
 - **Peça esgotada:** coloque estoque 0. Com estoque preenchido, as peças ficam reservadas assim que o pedido é feito e voltam ao estoque se o pedido for cancelado ou o pagamento não for concluído no prazo (PIX: 30 min; cartão: 48 h; boleto: 5 dias).
 - **Calçados e peças com tamanhos:** o estoque é preenchido por tamanho na tela da peça.
+- **"Combine com":** na janela de cada bolsa e na sacola, a loja sugere sozinha até 2 calçados que combinam (cor parecida, tons neutros, mesma marca e preço parecido) e a cliente leva os dois com um clique. Para a sugestão ficar boa, cadastre as **cores** das bolsas e dos calçados. Só entram calçados com tamanho disponível.
 - **PIX direto:** o QR vale 1 hora; o pedido só é cancelado sozinho 1 hora depois de vencer. Se o PIX cair depois do cancelamento, ainda dá para usar **Marcar como pago** no pedido cancelado (se a peça já tiver sido vendida, aparece o alerta de estoque).
 - **Pedido novo:** aparece com som e aviso no canto da tela. Para receber aviso mesmo com o painel em outra aba, clique no sininho e em **Ativar**.
 - **Entregas regionais e cupons:** edite em Painel > Entregas e Painel > Cupons. Os valores de entrega aparecem sozinhos na página da loja e na sacola.
@@ -233,6 +234,7 @@ neo-store/
 │   │   ├── state.js                 Produtos, entregas, sacola, favoritos, cupom, filtro
 │   │   ├── catalog.js               Vitrine, filtros, favoritos, janela do produto
 │   │   ├── cart.js                  Sacola e cupom
+│   │   ├── look.js                  "Combine com": calçado que combina com a bolsa
 │   │   ├── ui.js                    Abrir e fechar janelas, menu do celular, busca
 │   │   ├── checkout.js              Dados, entrega, pagamento, PIX
 │   │   ├── newsletter.js            Cadastro de novidades

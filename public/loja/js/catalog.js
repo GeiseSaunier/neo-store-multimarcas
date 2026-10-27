@@ -89,17 +89,19 @@ function openProduct(id){const p=P.find(x=>x.id===id);sel={id,size:p.sizes.lengt
      <button class="btn solid" style="flex:1" id="addBtn" ${p.out?'disabled':''}>${p.out?'Esgotado':'Adicionar à sacola'}</button>
      <button class="icon-btn fav" style="position:static;border:1px solid var(--line);width:52px;height:52px" data-fav="${p.id}" aria-pressed="${favs.includes(p.id)}" aria-label="Favoritar">${heart}</button>
    </div>
+   ${lookHTML(p)}
    <ul class="det">${p.det.map(d=>`<li>${d}</li>`).join('')}<li>Produto 100% original</li></ul>
   </div></div>`;
-  open('#pModal');
+  open('#pModal');lookTotal();
   const box=$('#pBox');
   box.onclick=e=>{const t=e.target;
+    if(lookClick(t))return;
     const c=t.closest('[data-col]');if(c){sel.col=c.dataset.col;$$('#pCols [data-col]').forEach(b=>b.setAttribute('aria-pressed',b===c))}
     const s=t.closest('[data-size]');if(s){sel.size=s.dataset.size;$$('#pSizes [data-size]').forEach(b=>b.setAttribute('aria-pressed',b===s));const w=$('#sizeWarn');if(w)w.textContent='';sel.qty=Math.max(1,Math.min(sel.qty,room(p,sel.size)));$('#qv').textContent=sel.qty}
     const f=t.closest('[data-fav]');if(f)toggleFav(f.dataset.fav,f);
     const gi=t.closest('[data-img]');if(gi){box.querySelector('.pic > img').src=gi.dataset.img;box.querySelectorAll('[data-img]').forEach(x=>x.setAttribute('aria-pressed',x===gi))}
-    if(t.closest('#qm')){sel.qty=Math.max(1,sel.qty-1);$('#qv').textContent=sel.qty}
-    if(t.closest('#qp')){const max=Math.min(9,sel.size?Math.max(1,room(p,sel.size)):9);if(sel.qty>=max&&sel.size)toast('Não há mais unidades disponíveis');sel.qty=Math.min(max,sel.qty+1);$('#qv').textContent=sel.qty}
+    if(t.closest('#qm')){sel.qty=Math.max(1,sel.qty-1);$('#qv').textContent=sel.qty;lookTotal()}
+    if(t.closest('#qp')){const max=Math.min(9,sel.size?Math.max(1,room(p,sel.size)):9);if(sel.qty>=max&&sel.size)toast('Não há mais unidades disponíveis');sel.qty=Math.min(max,sel.qty+1);$('#qv').textContent=sel.qty;lookTotal()}
     if(t.closest('#addBtn')){if(!sel.size){$('#sizeWarn').textContent='· escolha um tamanho';return}
       addToCart(sel.id,sel.size,sel.col,sel.qty);close('#pModal');setTimeout(()=>openDrawer(),250)}
   };
