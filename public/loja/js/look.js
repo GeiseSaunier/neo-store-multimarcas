@@ -23,7 +23,7 @@ function lookFor(bag,n=2){if(!bag||bag.c!=='bolsas')return[];
 
 /* ================= Peças da sugestão ================= */
 function lookSizes(s,attr,picked){return s.sizes.length>1?`<div class="chips look-sizes">${s.sizes.map(z=>`<button class="chip" ${attr}="${z}" aria-pressed="${picked===z}" ${room(s,z)>0?'':'disabled title="Esgotado"'}>${z}</button>`).join('')}</div>`:''}
-function lookCard(s,on,attr,picked){return`<div class="look-item" data-look="${s.id}" aria-pressed="${on}">
+function lookCard(s,on,attr,picked){return`<div class="look-item" data-look="${s.id}" aria-pressed="${on}" role="button" tabindex="0" aria-label="Escolher ${s.n}">
   <button class="look-pic" data-lopen="${s.id}" aria-label="Ver ${s.n}">${pic(s)}</button>
   <div class="look-info"><b>${s.n}</b><small>${label(s)}</small><span class="price">${brl(s.p)}</span>${lookSizes(s,attr,picked)}</div></div>`}
 
@@ -50,6 +50,9 @@ function lookClick(t){if(!look||!t.closest('#look'))return false;
     addToCart(sel.id,sel.size,sel.col,sel.qty,true);addToCart(s.id,look.size,s.cols[0],1,true);
     toast(`${look.bag.n} e ${s.n} na sacola`,['Ver sacola',openDrawer]);close('#pModal');setTimeout(()=>openDrawer(),250);return true}
   return true}
+
+/* teclado: Enter ou Espaço num cartão de calçado equivale a clicar nele */
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches?.('.look-item')){e.preventDefault();e.target.click()}});
 
 /* ================= Na sacola ================= */
 let dLook=null; /* {id, size} */

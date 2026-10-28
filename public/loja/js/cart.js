@@ -11,7 +11,13 @@ function addToCart(id,size,col,qty,quiet){const p=P.find(x=>x.id===id);const r=r
 /* valor de uma entrega regional como a cliente vê */
 function shipPrice(o){return o.price_label?esc(o.price_label):o.to_confirm?'Consulte':o.price?brl(o.price):'Grátis'}
 function save(){store.set('neo-cart',cart);store.set('neo-coupon',coupon);renderDrawer();updateBadges()}
-function totals(){const sub=cart.reduce((s,i)=>s+P.find(p=>p.id===i.id).p*i.q,0);const disc=coupon?Math.round(sub*coupon.pct)/100:0;return{sub,disc,after:sub-disc}}
+/* o cupom não vale em peça em promoção: desconta só do valor das peças fora da promoção (igual ao servidor) */
+function totals(){const items=cart.map(i=>({p:P.find(p=>p.id===i.id),q:i.q}));
+  const sub=items.reduce((s,i)=>s+i.p.p*i.q,0),base=items.reduce((s,i)=>s+(i.p.pr?0:i.p.p*i.q),0);
+  const disc=coupon?Math.round(base*coupon.pct)/100:0;return{sub,disc,after:sub-disc,base,promoItems:items.some(i=>i.p.pr)}}
+function couponHint(t){if(!coupon)return'Tem um cupom? Digite aqui.';
+  if(!t.base)return`<span class="hint err">O cupom ${coupon.code} não vale para peças em promoção.</span>`;
+  return`<span class="hint ok">Cupom ${coupon.code} aplicado${t.promoItems?' nas peças fora da promoção':''}${coupon.first?' (válido só na primeira compra)':''}.</span>`}
 function updateBadges(which,bump){const n=cart.reduce((s,i)=>s+i.q,0);const cc=$('#cartCount');cc.textContent=n;cc.classList.toggle('on',n>0);
   const fc=$('#favCount');fc.textContent=favs.length;fc.classList.toggle('on',favs.length>0);
   if(bump){cc.classList.remove('bump');void cc.offsetWidth;cc.classList.add('bump')}}
@@ -22,7 +28,7 @@ function renderDrawer(){const b=$('#drawerBody'),f=$('#drawerFoot');const n=cart
   b.innerHTML=`<div class="ship-bar">${[...SHIP.regional.map(o=>`${esc(o.name)} <b>${shipPrice(o)}</b>`),...(SHIP.correios?['Correios para todo o Brasil']:[])].join(' · ')}</div>`+
   cart.map(i=>{const p=P.find(x=>x.id===i.id);return`<div class="line"><div class="thumb">${pic(p)}</div><div><h4>${p.n}</h4><small>${i.size!=='Único'?'Tam. '+i.size+' · ':''}<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${i.col};vertical-align:-1px;border:1px solid var(--line)"></span></small>
    <div class="qty"><button data-dq="${i.k}" aria-label="Diminuir">−</button><span>${i.q}</span><button data-iq="${i.k}" aria-label="Aumentar">+</button></div><button class="rm" data-rm="${i.k}">Remover</button></div><div class="price">${brl(p.p*i.q)}</div></div>`}).join('')+lookDrawerHTML();
-  f.innerHTML=`<div class="coupon"><input id="cpIn" placeholder="Cupom de desconto" value="${coupon?coupon.code:''}" aria-label="Cupom"><button id="cpBtn">${coupon?'Remover':'Aplicar'}</button></div><div class="hint" id="cpHint">${coupon?`<span class="hint ok">Cupom ${coupon.code} aplicado${coupon.first?' (válido só na primeira compra)':''}.</span>`:'Tem um cupom? Digite aqui.'}</div>
+  f.innerHTML=`<div class="coupon"><input id="cpIn" placeholder="Cupom de desconto" value="${coupon?coupon.code:''}" aria-label="Cupom"><button id="cpBtn">${coupon?'Remover':'Aplicar'}</button></div><div class="hint" id="cpHint">${couponHint(t)}</div>
   <div style="margin-top:14px"><div class="sumrow"><span>Subtotal</span><span>${brl(t.sub)}</span></div>${t.disc?`<div class="sumrow"><span>Desconto</span><span class="disc">− ${brl(t.disc)}</span></div>`:''}
   <div class="sumrow total"><span>Total</span><span>${brl(t.after)}</span></div><div class="hint" style="text-align:right">${inst(t.after)} · frete calculado no próximo passo</div></div>
   <button class="btn solid block" style="margin-top:16px" id="goCheckout">Finalizar compra</button>`;

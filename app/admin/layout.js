@@ -21,6 +21,7 @@ const NAV = [
   { href: '/admin/pedidos', label: 'Pedidos', icon: <><path d="M5 8h14l-1.2 12H6.2z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></>, count: true },
   { href: '/admin/produtos', label: 'Produtos', icon: <><path d="M4 7l8-4 8 4-8 4z" /><path d="M4 7v10l8 4 8-4V7" /><path d="M12 11v10" /></> },
   { href: '/admin/fretes', label: 'Entregas', icon: <><path d="M3 15h18l-2 4H5z" /><path d="M6 15V9h8l3 6M9 9V5h4v4" /></> },
+  { href: '/admin/promocoes', label: 'Promoções', icon: <><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.3" /></> },
   { href: '/admin/cupons', label: 'Cupons', icon: <><path d="M4 8a2 2 0 0 0 0 4v4h16v-4a2 2 0 0 1 0-4V4H4z" transform="translate(0 2)" /><path d="M10 9l4 4M14 9h0M10 13h0" /></> },
   { href: '/admin/assinantes', label: 'Novidades', icon: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 6 8.5 7 8.5-7" /></> },
 ];
@@ -55,16 +56,20 @@ export default function AdminLayout({ children }) {
 
   // ---------- autenticação ----------
   useEffect(() => {
-    let alive = true;
+    let alive = true, checkedUser = null;
     async function check(s) {
       if (!alive) return;
       setSession(s);
-      if (!s) { setState('out'); return; }
+      if (!s) { checkedUser = null; setState('out'); return; }
+      if (s.user.id === checkedUser) return; // mesmo usuário (ex.: login renovado): já conferido
+      checkedUser = s.user.id;
       const { data } = await sb.rpc('is_admin');
       if (alive) setState(data ? 'ok' : 'denied');
     }
     sb.auth.getSession().then(({ data }) => check(data.session));
-    const { data: sub } = sb.auth.onAuthStateChange((_e, s) => check(s));
+    // O Supabase pede para não chamar o banco dentro deste aviso (pode travar o login):
+    // a conferência roda logo depois que ele termina.
+    const { data: sub } = sb.auth.onAuthStateChange((_e, s) => { setTimeout(() => check(s), 0); });
     return () => { alive = false; sub.subscription.unsubscribe(); };
   }, [sb]);
 

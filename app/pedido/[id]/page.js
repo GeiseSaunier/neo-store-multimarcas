@@ -53,8 +53,14 @@ export default function OrderStatus() {
             </>)
           : o.status === 'cancelled' ? (<>
               <h1>Pedido #{o.code} cancelado</h1>
-              <p>O pagamento não foi concluído a tempo. Se quiser, faça o pedido de novo ou fale com a gente.</p>
-              <a className="btn solid" href="/">Voltar para a loja</a><a className="btn ghost" href={wa}>Falar no WhatsApp</a>
+              {o.pix_direct ? (<>
+                <p>O prazo do PIX terminou antes de conferirmos o pagamento. <b>Se você já pagou, não pague de novo:</b> envie o comprovante pelo WhatsApp que confirmamos o seu pedido.</p>
+                <a className="btn solid" href={`https://wa.me/${STORE.whatsapp}?text=${encodeURIComponent(`Olá! Paguei o PIX do pedido #${o.code} (${brl(o.total)}), mas ele aparece cancelado. Segue o comprovante.`)}`} target="_blank" rel="noopener">Enviar comprovante pelo WhatsApp</a>
+                <a className="btn ghost" href="/">Voltar para a loja</a>
+              </>) : (<>
+                <p>O pagamento não foi concluído a tempo. Se quiser, faça o pedido de novo ou fale com a gente.</p>
+                <a className="btn solid" href="/">Voltar para a loja</a><a className="btn ghost" href={wa}>Falar no WhatsApp</a>
+              </>)}
             </>)
           : (<>
               <h1>Aguardando o pagamento</h1>

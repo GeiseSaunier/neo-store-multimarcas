@@ -115,3 +115,19 @@ section{padding-block:110px}
 .soon-empty .mono{width:36px;margin:0 auto 18px;color:var(--stone)}
 .soon-empty .t{font-family:var(--serif);font-size:30px;color:var(--ink);margin:0 0 6px}
 .soon-empty p{margin:0 0 22px}
+
+/* ================= Faixa de promoções (promos.js) ================= */
+.promos{background:var(--tint2);padding-block:56px}
+.promos .sec-head{margin-bottom:26px}
+.promo-row{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,260px);gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:12px;scrollbar-width:thin}
+.promo-card{scroll-snap-align:start;gap:10px}
+.promo-card .tag{background:var(--ink);color:var(--linen)}
+.promo-card .tag.out{left:auto;right:14px;background:var(--linen);color:var(--ink)}
+.promo-card h3{font-family:var(--serif);font-weight:400;font-size:20px;margin:0;color:var(--ink);cursor:pointer}
+.promo-card .sub{font-size:12px;color:var(--muted)}
+.promo-card .price{font-size:15px;color:var(--ink)}
+.promo-card .price s{color:var(--muted);margin-right:8px;font-size:13px}
+.promo-end{font-size:12px;color:var(--err)}
+/* janela da peça: nome e prazo da promoção */
+.promo-line{margin-top:8px;font-size:12px;letter-spacing:.04em;color:var(--err)}
+@media (max-width:640px){.promos{padding-block:40px}.promo-row{grid-auto-columns:72%}}

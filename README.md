@@ -152,6 +152,7 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 - **"Combine com":** na janela de cada bolsa e na sacola, a loja sugere sozinha até 2 calçados que combinam (cor parecida, tons neutros, mesma marca e preço parecido) e a cliente leva os dois com um clique. Para a sugestão ficar boa, cadastre as **cores** das bolsas e dos calçados. Só entram calçados com tamanho disponível.
 - **PIX direto:** o QR vale 1 hora; o pedido só é cancelado sozinho 1 hora depois de vencer. Se o PIX cair depois do cancelamento, ainda dá para usar **Marcar como pago** no pedido cancelado (se a peça já tiver sido vendida, aparece o alerta de estoque).
 - **Pedido novo:** aparece com som e aviso no canto da tela. Para receber aviso mesmo com o painel em outra aba, clique no sininho e em **Ativar**.
+- **Promoções:** Painel > Promoções > Nova promoção. Defina o nome (ex.: Black Friday), o desconto em %, a data e hora de início e de fim e as peças. No período, a loja mostra o preço com desconto, o preço riscado e uma faixa na página inicial; no fim, as peças voltam sozinhas ao preço normal. Dá para pausar, retomar, encerrar na hora, editar e excluir. Se uma peça estiver em duas promoções, vale a de maior desconto. **Cupom não vale em peça em promoção:** numa sacola misturada, ele desconta só das peças fora da promoção.
 - **Entregas regionais e cupons:** edite em Painel > Entregas e Painel > Cupons. Os valores de entrega aparecem sozinhos na página da loja e na sacola.
 - **Cupom de boas-vindas:** marque **Só na primeira compra** para o cupom valer uma única vez por CPF (o BEMVINDA já vem assim). O cadastro de novidades só cita o BEMVINDA enquanto ele estiver ativo.
 - **Pedido de exclusão de dados (LGPD):** em Painel > Novidades, use **Excluir** no contato.
@@ -213,6 +214,7 @@ neo-store/
 │   ├── api.js                       Respostas padrão das rotas
 │   ├── admin.js                     Confere se quem chamou é administrador
 │   ├── orders.js                    Expiração de pedidos e mensagens de estoque
+│   ├── promo.js                     Preço com promoção (vitrine e checkout usam o mesmo cálculo)
 │   ├── pix.js                       Código PIX copia e cola (BR Code do Banco Central)
 │   ├── photos.js                    Limpeza segura das fotos sem uso no Storage
 │   ├── ratelimit.js                 Limite de tentativas por IP (no banco, função rate_hit)
@@ -234,6 +236,7 @@ neo-store/
 │   │   ├── state.js                 Produtos, entregas, sacola, favoritos, cupom, filtro
 │   │   ├── catalog.js               Vitrine, filtros, favoritos, janela do produto
 │   │   ├── cart.js                  Sacola e cupom
+│   │   ├── promos.js                Faixa de promoções da página inicial
 │   │   ├── look.js                  "Combine com": calçado que combina com a bolsa
 │   │   ├── ui.js                    Abrir e fechar janelas, menu do celular, busca
 │   │   ├── checkout.js              Dados, entrega, pagamento, PIX

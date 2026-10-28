@@ -7,7 +7,8 @@ const read = (f) => fs.readFileSync(new URL(`../public/loja/js/${f}`, import.met
 // Carrega config.js + look.js como no navegador, com o catálogo P e o estoque (room) de teste.
 function loadLook(P, stock = {}) {
   const room = (p, size) => stock[`${p.id}|${size}`] ?? stock[p.id] ?? 1;
-  return new Function('P', 'room', `${read('config.js')}\n${read('look.js')}\nreturn { lookFor, colorDist, isNeutral, lookScore };`)(P, room);
+  const document = { addEventListener() {} }; // look.js registra o atalho de teclado
+  return new Function('P', 'room', 'document', `${read('config.js')}\n${read('look.js')}\nreturn { lookFor, colorDist, isNeutral, lookScore };`)(P, room, document);
 }
 const item = (id, c, cols, extra = {}) => ({ id, n: id, b: 'carmen', c, cols, p: 300, sizes: c === 'calcados' ? ['35', '36'] : ['Único'], out: false, ...extra });
 

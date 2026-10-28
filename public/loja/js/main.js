@@ -6,13 +6,16 @@ $('#legalLine').textContent=`${LEGAL.company} · CNPJ ${LEGAL.cnpj} · ${LEGAL.c
 $('#igLink').href=LEGAL.instagram;if(LEGAL.email){$('#mailLink').href='mailto:'+LEGAL.email;$('#mailLink').textContent=LEGAL.email}else $('#mailLink').parentElement.remove();
 renderTabs();updateBadges();
 (async()=>{
-  try{const[pr,sr]=await Promise.all([fetch('/api/products'),fetch('/api/shipping')]);const pj=await pr.json();if(!pr.ok)throw new Error(pj.error);P=pj.products.map(mapP);if(sr.ok)SHIP=await sr.json()}
+  try{const[pr,sr]=await Promise.all([fetch('/api/products'),fetch('/api/shipping')]);const pj=await pr.json();if(!pr.ok)throw new Error(pj.error);P=pj.products.map(mapP);PROMOS=pj.promos||[];if(sr.ok)SHIP=await sr.json()}
   catch(e){$('#grid').innerHTML='<div class="empty">Não foi possível carregar as peças agora. Atualize a página em instantes.</div>';return}
   cart=cart.filter(i=>P.some(p=>p.id===i.id));favs=favs.filter(id=>P.some(p=>p.id===id));store.set('neo-favs',favs);
   const ed=(P.find(p=>/shopper/i.test(p.n))||P[0]||{}).img;if(ed)$('#editImg').src=ed;else $('#editImg').closest('.frame').innerHTML='<span class="mono" style="width:38%"></span>';
-  renderCats();renderGrid();save();renderRates();
+  renderCats();renderGrid();save();renderRates();renderPromos();
   checkLastOrder();
 })();
+/* Recarrega as peças e os preços (ex.: uma promoção terminou enquanto a página estava aberta). */
+async function reloadCatalog(){try{const r=await fetch('/api/products');const j=await r.json();if(!r.ok)return;
+  P=j.products.map(mapP);PROMOS=j.promos||[];cart=cart.filter(i=>P.some(p=>p.id===i.id));renderCats();renderGrid();renderPromos();save()}catch(e){}}
 /* Seção "Entrega": opções regionais do painel + Correios. */
 function renderRates(){$('#rates').innerHTML=SHIP.regional.map(o=>`<div class="rate"><div><h4>${esc(o.name)}</h4><small>${esc(o.description)}</small></div><b>${shipPrice(o)}</b></div>`).join('')+
   (SHIP.correios?'<div class="rate"><div><h4>Todo o Brasil</h4><small>Correios PAC ou SEDEX · prazo e valor calculados pelo CEP</small></div><b>Pelo CEP</b></div>':'')}

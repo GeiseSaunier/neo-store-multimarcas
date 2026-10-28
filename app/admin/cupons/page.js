@@ -26,7 +26,7 @@ export default function Coupons() {
   const remove = async (c) => { if (confirm(`Excluir o cupom ${c.code}?`)) { await sb.from('coupons').delete().eq('code', c.code); load(); } };
   return (
     <>
-      <div className="page-head"><div><h1>Cupons</h1><p>Códigos de desconto em porcentagem sobre as peças (não vale para o frete).</p></div></div>
+      <div className="page-head"><div><h1>Cupons</h1><p>Códigos de desconto em porcentagem sobre as peças. Não vale para o frete nem para peças em promoção.</p></div></div>
       <form onSubmit={add} className="card" style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 20 }}>
         <div className="field"><label htmlFor="cc">Código</label><input id="cc" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Ex.: NATAL15" /></div>
         <div className="field" style={{ width: 120 }}><label htmlFor="cp">Desconto (%)</label><input id="cp" inputMode="decimal" value={pct} onChange={(e) => setPct(e.target.value)} /></div>

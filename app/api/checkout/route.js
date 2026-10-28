@@ -3,7 +3,8 @@ import { createPixPayment, createPreference } from '@/lib/mercadopago';
 import { quoteCorreios } from '@/lib/shipping';
 import { notifyNewOrder, notifyOrderCreated, notifyError } from '@/lib/email';
 import { json, fail, siteUrl } from '@/lib/api';
-import { onlyDigits, round2, validCpf } from '@/lib/format';
+import { onlyDigits, round2, validCpf, brl } from '@/lib/format';
+import { applyPromo, loadActivePromos } from '@/lib/promo';
 import { STORE, PIX } from '@/lib/config';
 import { pixPayload } from '@/lib/pix';
 import QRCode from 'qrcode';
@@ -55,8 +56,11 @@ export async function POST(req) {
     const { data: prods, error: pe } = await db.from('products').select('*').in('id', ids).eq('active', true);
     if (pe) throw pe;
     const byId = Object.fromEntries(prods.map((p) => [p.id, p]));
+    // igual à vitrine (/api/products): se não der para ler as promoções, vale o preço normal
+    const promos = await loadActivePromos(db).catch((e) => { console.error('promoções', e); return []; });
     const lines = [];
     const qtyById = {};
+    let couponBase = 0; // valor das peças fora de promoção: só nelas o cupom vale
     for (const it of items) {
       const p = byId[it.id];
       const qty = Math.min(9, Math.max(1, parseInt(it.qty, 10) || 1));
@@ -68,9 +72,17 @@ export async function POST(req) {
       qtyById[key] = (qtyById[key] || 0) + qty;
       const avail = available(p, size);
       if (avail != null && qtyById[key] > avail) return fail(stockText(p.name, p.size_stock ? size : null, avail));
-      lines.push({ product_id: p.id, name: p.name, brand: p.brand, brand_label: p.brand_label || null, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: Number(p.price), image: p.images?.[0] || null });
+      // preço do momento (com promoção, se houver); se mudou desde que a cliente abriu a página, avisa
+      const { price, promo } = applyPromo(p, promos);
+      if (it.price != null && Math.abs(Number(it.price) - price) > 0.009) {
+        const why = promo && price < Number(it.price) ? ' (entrou em promoção)' : !promo && price > Number(it.price) ? ' (a promoção terminou)' : '';
+        return json({ error: `O preço de ${p.name} mudou para ${brl(price)}${why}. Atualizamos a sacola; confira o novo total.`, prices_changed: true }, 409);
+      }
+      lines.push({ product_id: p.id, name: p.name, brand: p.brand, brand_label: p.brand_label || null, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: price, image: p.images?.[0] || null });
+      if (!promo) couponBase += price * qty;
     }
     const subtotal = round2(lines.reduce((s, l) => s + l.unit_price * l.qty, 0));
+    couponBase = round2(couponBase);
 
     // ---------- cupom ----------
     let discount = 0, couponCode = null;
@@ -79,12 +91,17 @@ export async function POST(req) {
       const code = String(coupon).trim().toUpperCase();
       const { data: c } = await db.from('coupons').select('*').eq('code', code).eq('active', true).maybeSingle();
       if (!c) return json({ error: `O cupom ${code} não está mais disponível. Removemos o desconto; confira o novo total.`, coupon: false }, 400);
-      if (c.first_purchase) {
-        const { count: before } = await db.from('orders').select('id', { count: 'exact', head: true })
-          .eq('cpf', cpf).in('status', ['pending', 'paid', 'shipped', 'delivered']);
-        if (before > 0) return json({ error: `O cupom ${c.code} vale só na primeira compra. Removemos o desconto; confira o novo total.`, coupon: false }, 400);
+      // Cupom não vale em peça em promoção. Só com peças em promoção, segue sem desconto e sem
+      // registrar o cupom no pedido. (Para cupom de primeira compra, esse pedido já conta como
+      // a primeira compra do CPF.)
+      if (couponBase > 0) {
+        if (c.first_purchase) {
+          const { count: before } = await db.from('orders').select('id', { count: 'exact', head: true })
+            .eq('cpf', cpf).in('status', ['pending', 'paid', 'shipped', 'delivered']);
+          if (before > 0) return json({ error: `O cupom ${c.code} vale só na primeira compra. Removemos o desconto; confira o novo total.`, coupon: false }, 400);
+        }
+        couponCode = c.code; discount = round2(couponBase * Number(c.percent) / 100);
       }
-      couponCode = c.code; discount = round2(subtotal * Number(c.percent) / 100);
     }
 
     // ---------- frete ----------

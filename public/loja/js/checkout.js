@@ -98,8 +98,8 @@ async function nextStep(){
     const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       customer:{nome:co.data.nome,email:co.data.email,tel:co.data.tel,cpf:co.data.cpf},
       address:{cep:co.data.cep,rua:co.data.rua,num:co.data.num,comp:co.data.comp,bairro:co.data.bairro,cidade:co.data.cidade},
-      items:cart.map(i=>({id:i.id,size:i.size,color:i.col,qty:i.q})),shipping:co.ship,coupon:coupon?coupon.code:null,payment:co.pay})});
-    const j=await r.json();if(!r.ok){if(j.coupon===false){coupon=null;save()}throw new Error(j.error||'Não foi possível finalizar o pedido.')}
+      items:cart.map(i=>({id:i.id,size:i.size,color:i.col,qty:i.q,price:P.find(x=>x.id===i.id).p})),shipping:co.ship,coupon:coupon?coupon.code:null,payment:co.pay})});
+    const j=await r.json();if(!r.ok){if(j.coupon===false){coupon=null;save()}if(j.prices_changed)await reloadCatalog();throw new Error(j.error||'Não foi possível finalizar o pedido.')}
     // a sacola só é esvaziada quando o pagamento é confirmado
     store.set('neo-last-order',j.orderId);
     if(j.redirect){location.href=j.redirect;return}

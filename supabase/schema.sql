@@ -126,6 +126,22 @@ create table if not exists public.order_items (
 alter table public.order_items add column if not exists brand_label text; -- nome da marca avulsa
 create index if not exists order_items_order_idx on public.order_items (order_id);
 
+-- ---------- Promoções (cadastradas no painel) ----------
+-- Desconto em % nas peças escolhidas, entre starts_at e ends_at. O servidor calcula o
+-- preço na hora (lib/promo.js); com duas promoções na mesma peça, vale a de maior %.
+create table if not exists public.promotions (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  percent numeric(5,2) not null check (percent > 0 and percent < 100),
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  active boolean not null default true,       -- false = pausada
+  product_ids uuid[] not null default '{}',
+  created_at timestamptz not null default now(),
+  constraint promotions_period_check check (ends_at > starts_at)
+);
+create index if not exists promotions_period_idx on public.promotions (ends_at, starts_at);
+
 -- ---------- Cadastro de novidades ----------
 create table if not exists public.subscribers (
   id uuid primary key default gen_random_uuid(),
@@ -288,6 +304,11 @@ create policy "admin itens" on public.order_items for all using (public.is_admin
 
 drop policy if exists "admin assinantes" on public.subscribers;
 create policy "admin assinantes" on public.subscribers for all using (public.is_admin()) with check (public.is_admin());
+
+alter table public.promotions enable row level security;
+drop policy if exists "admin promocoes" on public.promotions;
+create policy "admin promocoes" on public.promotions for all using (public.is_admin()) with check (public.is_admin());
+-- A vitrine lê as promoções pelo servidor (/api/products), que usa a chave service_role.
 -- Pedidos e cadastros são criados pelo servidor (chave service_role), que ignora o RLS.
 
 -- ---------- Notificações em tempo real no painel ----------

@@ -1,7 +1,7 @@
 /* Neo Store · vitrine
    Cartões de produto, marcas, filtros, favoritos e janela do produto. */
 function pic(p){return p.img?`<img src="${esc(p.img)}" alt="${p.n}" loading="lazy">`:`<span class="mono" style="width:22%;color:var(--stone)"></span>`}
-function mapP(x){const cols=(x.colors||[]).filter(Boolean);return{id:x.id,n:esc(x.name),b:x.brand,bl:esc(x.brand_label||''),c:x.category,img:x.images?.[0]||'',imgs:x.images||[],p:x.price,o:x.old_price||0,
+function mapP(x){const cols=(x.colors||[]).filter(Boolean);return{id:x.id,n:esc(x.name),b:x.brand,bl:esc(x.brand_label||''),c:x.category,img:x.images?.[0]||'',imgs:x.images||[],p:x.price,o:x.old_price||0,pr:x.promo||null,
   sizes:(x.sizes?.length?x.sizes:['Único']).map(esc),cols:cols.length?cols.map(esc):[''],d:esc(x.description),det:(x.details||[]).map(esc),out:x.stock===0,st:x.stock,
   ss:x.size_stock?Object.fromEntries(Object.entries(x.size_stock).map(([k,v])=>[esc(k),+v])):null}}
 /* estoque: quanto há do tamanho e quanto ainda cabe na sacola */
@@ -80,7 +80,8 @@ function openProduct(id){const p=P.find(x=>x.id===id);sel={id,size:p.sizes.lengt
   <div class="pv"><div class="pic">${pic(p)}${p.imgs.length>1?`<div class="thumbs">${p.imgs.map((u,i)=>`<button data-img="${esc(u)}" aria-pressed="${i===0}" aria-label="Foto ${i+1}"><img src="${esc(u)}" alt=""></button>`).join('')}</div>`:''}</div><div class="info">
    <div class="sub" style="font-size:12px;color:var(--muted)">${label(p)}</div>
    <h2>${p.n}</h2>
-   <div><div class="price">${p.o?`<s>${brl(p.o)}</s>`:''}${brl(p.p)}</div><div class="inst">${inst(p.p)} · ${brl(p.p*.95)} no PIX</div></div>
+   <div><div class="price">${p.o?`<s>${brl(p.o)}</s>`:''}${brl(p.p)}</div><div class="inst">${inst(p.p)} · ${brl(p.p*.95)} no PIX</div>
+     ${p.pr?`<div class="promo-line">${esc(p.pr.name)} · −${Math.round(p.pr.percent)}% · ${promoEnds(p.pr.ends_at)}</div>`:''}</div>
    <p class="desc">${p.d}</p>
    <div ${p.cols.length<2?'hidden':''}><div class="opt-label">Cor</div><div class="chips" id="pCols">${p.cols.map((c,i)=>`<button class="color-chip" style="background:${c}" data-col="${c}" aria-pressed="${i===0}" aria-label="Cor ${i+1}"></button>`).join('')}</div></div>
    ${p.sizes.length>1?`<div><div class="opt-label">Tamanho <span id="sizeWarn" class="hint err"></span></div><div class="chips" id="pSizes">${p.sizes.map(s=>`<button class="chip" data-size="${s}" aria-pressed="false" ${p.ss&&!avail(p,s)?'disabled title="Esgotado"':''}>${s}</button>`).join('')}</div></div>`:''}

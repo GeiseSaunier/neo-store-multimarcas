@@ -13,6 +13,8 @@ const nextConfig = {
   // O site não usa next/image; desligar o otimizador fecha uma porta de ataque.
   images: { unoptimized: true },
   poweredByHeader: false,
+  // não criar o AGENTS.md na pasta do projeto a cada "npm run dev"
+  agentRules: false,
   async rewrites() {
     return [{ source: '/', destination: '/loja.html' }];
   },
