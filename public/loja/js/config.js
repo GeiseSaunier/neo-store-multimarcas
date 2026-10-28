@@ -1,7 +1,7 @@
 /* Neo Store · configuração da loja
    Marcas, subcategorias e WhatsApp. Mantenha igual a lib/config.js. */
 /* menu:false = não aparece como marca no menu (peças avulsas; aparecem pelos atalhos de categoria). */
-const BRANDS={capodarte:{n:'Capodarte',subs:['bolsas','carteiras']},carmen:{n:'Carmen Steffens',subs:['bolsas','carteiras','calcados']},csclub:{n:'Cs Club',subs:['bolsas','calcados']},outras:{n:'Outras marcas',subs:['roupas'],menu:false}};
+const BRANDS={capodarte:{n:'Capodarte',subs:['bolsas','carteiras']},carmen:{n:'Carmen Steffens',subs:['bolsas','carteiras','calcados']},csclub:{n:'Cs Club',subs:['bolsas','calcados']},myfit:{n:'My Fit',subs:['roupas']},outras:{n:'Outras marcas',subs:['roupas'],menu:false}};
 const SUBS={bolsas:'Bolsas',carteiras:'Carteiras',calcados:'Calçados',roupas:'Roupas'};
 /* Atalhos do menu que juntam uma categoria de todas as marcas. */
 const SHORTCUTS=['calcados','roupas'];

@@ -40,7 +40,7 @@ create table if not exists public.products (
 -- Marcas e categorias aceitas (iguais a BRANDS e SUBS em lib/config.js).
 -- "outras" = marcas avulsas (ex.: roupas); o nome da marca fica em brand_label.
 alter table public.products drop constraint if exists products_brand_check;
-alter table public.products add constraint products_brand_check check (brand in ('capodarte','carmen','csclub','outras'));
+alter table public.products add constraint products_brand_check check (brand in ('capodarte','carmen','csclub','myfit','outras'));
 alter table public.products drop constraint if exists products_category_check;
 alter table public.products add constraint products_category_check check (category in ('bolsas','carteiras','calcados','roupas'));
 alter table public.products add column if not exists brand_label text;

@@ -5,11 +5,8 @@
   .ben-grid{grid-template-columns:repeat(2,1fr);gap:40px 0}
   .ben:nth-child(3){border-left:0;padding-left:0}
 }
-@media (max-width:1320px){
-  nav.main a{padding:6px 11px;letter-spacing:.05em}
-}
 /* com marcas e atalhos, o menu do topo vira menu de celular antes */
-@media (max-width:1180px){
+@media (max-width:1240px){
   nav.main{display:none}
   .menu-btn{display:grid}
   .hbar{grid-template-columns:auto 1fr auto}
