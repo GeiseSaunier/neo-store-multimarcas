@@ -7,13 +7,13 @@ import { downloadCsv } from '@/lib/csv';
 const fmtPhone = (v) => (v.length === 11 ? `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7)}` : v);
 
 export default function Subscribers() {
-  const { sb } = useAdmin();
+  const { sb, ask } = useAdmin();
   const [rows, setRows] = useState(null);
   const [ch, setCh] = useState('all');
   const load = () => sb.from('subscribers').select('*').order('created_at', { ascending: false }).then(({ data }) => setRows(data || []));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Pedido de exclusão da cliente (LGPD): apaga o contato de vez.
-  const remove = async (r) => { if (confirm(`Excluir o contato ${r.contact} da lista de novidades?`)) { await sb.from('subscribers').delete().eq('id', r.id); load(); } };
+  const remove = async (r) => { if (await ask({ title: 'Excluir este contato?', message: `${r.contact} sai da lista de novidades. Use quando a cliente pedir para não receber mais (LGPD).`, confirmLabel: 'Excluir contato', danger: true })) { await sb.from('subscribers').delete().eq('id', r.id); load(); } };
   const list = useMemo(() => (rows || []).filter((r) => ch === 'all' || r.channel === ch), [rows, ch]);
   const exportCsv = () => downloadCsv('cadastros-novidades.csv', ['Canal', 'Contato', 'Data'],
     list.map((r) => [r.channel === 'email' ? 'E-mail' : 'WhatsApp', r.contact, fmtDate(r.created_at)]));

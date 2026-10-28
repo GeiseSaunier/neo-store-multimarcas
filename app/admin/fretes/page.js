@@ -5,7 +5,7 @@ import { useAdmin } from '../_ctx';
 const slug = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
 
 function Row({ o, onSaved, onRemoved }) {
-  const { sb } = useAdmin();
+  const { sb, ask } = useAdmin();
   const [f, setF] = useState({ ...o, price: String(o.price), price_label: o.price_label || '' });
   const [msg, setMsg] = useState('');
   const set = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
@@ -16,7 +16,7 @@ function Row({ o, onSaved, onRemoved }) {
     setMsg(error ? 'Não foi possível salvar.' : 'Salvo.'); if (!error) onSaved();
   }
   async function remove() {
-    if (!confirm(`Excluir a opção “${o.name}”?`)) return;
+    if (!(await ask({ title: `Excluir a entrega “${o.name}”?`, message: 'Ela some do checkout. Para tirar só por um tempo, desligue “Disponível na loja”.', confirmLabel: 'Excluir entrega', danger: true }))) return;
     await sb.from('shipping_options').delete().eq('id', o.id); onRemoved();
   }
   return (

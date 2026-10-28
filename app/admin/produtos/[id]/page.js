@@ -20,7 +20,7 @@ const toForm = (data) => ({
 const stockKey = (f) => JSON.stringify([f.sizes, String(f.stock ?? ''), f.size_stock]);
 
 export default function ProductForm() {
-  const { sb } = useAdmin();
+  const { sb, ask } = useAdmin();
   const { id } = useParams();
   const router = useRouter();
   const isNew = id === 'nova';
@@ -113,7 +113,7 @@ export default function ProductForm() {
     setMsg({ t: 'Alterações salvas. A loja já mostra a versão nova.', ok: true });
   }
   async function remove() {
-    if (!confirm(`Excluir “${f.name}”? Pedidos antigos continuam guardados. Se quiser só tirar da loja, desligue “Mostrar na loja”.`)) return;
+    if (!(await ask({ title: `Excluir “${f.name}”?`, message: 'Pedidos antigos continuam guardados. Se quiser só tirar da loja, desligue “Mostrar na loja”.', confirmLabel: 'Excluir peça', danger: true }))) return;
     setBusy('del');
     const { error } = await sb.from('products').delete().eq('id', id);
     if (error) { setBusy(''); return setMsg({ t: 'Não foi possível excluir.' }); }

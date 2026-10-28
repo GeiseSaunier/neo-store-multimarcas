@@ -8,7 +8,7 @@ import { STATUS, PAYMENT_LABEL, SUBS, NEXT_STATUS, PIX, brandName } from '@/lib/
 const fmtPhone = (v) => { const d = onlyDigits(v); return d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : d.length === 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : v; };
 
 export default function OrderDetail({ order, onClose, onSaved }) {
-  const { sb, session, refreshUnseen } = useAdmin();
+  const { sb, session, refreshUnseen, ask } = useAdmin();
   const [tracking, setTracking] = useState(order.tracking_code || '');
   const [notes, setNotes] = useState(order.notes || '');
   const [busy, setBusy] = useState('');
@@ -29,8 +29,8 @@ export default function OrderDetail({ order, onClose, onSaved }) {
     return r?.ok ? null : j.error || 'Não foi possível salvar. Confira a internet e tente de novo.';
   }
   async function setStatus(status) {
-    if (status === 'cancelled' && !confirm(`Cancelar o pedido #${order.code}? As peças voltam para o estoque. Se ele já foi pago, faça o reembolso pelo Mercado Pago.`)) return;
-    if (status === 'paid' && !confirm(`Marcar o pedido #${order.code} como pago? Use só se você conferiu o pagamento. A cliente recebe o e-mail de confirmação.`)) return;
+    if (status === 'cancelled' && !(await ask({ title: `Cancelar o pedido #${order.code}?`, message: 'As peças voltam para o estoque. Se ele já foi pago, faça o reembolso pelo Mercado Pago.', confirmLabel: 'Cancelar pedido', cancelLabel: 'Manter pedido', danger: true }))) return;
+    if (status === 'paid' && !(await ask({ title: `Marcar o pedido #${order.code} como pago?`, message: `Use só se você conferiu o pagamento${order.pix_direct ? ` no app da ${PIX.bank}` : ''}. A cliente recebe o e-mail de confirmação.`, confirmLabel: 'Marcar como pago' }))) return;
     setBusy(status); setMsg('');
     const err = await save(status);
     setBusy('');

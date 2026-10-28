@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AdminCtx } from './_ctx';
+import { useConfirm } from './_components/ConfirmDialog';
 import { supabase } from '@/lib/supabase-browser';
 import { brl, fmtDateTime } from '@/lib/format';
 
@@ -53,6 +54,7 @@ export default function AdminLayout({ children }) {
   const [perm, setPerm] = useState('default');
   const notified = useRef(new Set());
   const isLogin = path === '/admin/login';
+  const { ask, element: confirmDialog } = useConfirm(); // confirmações com o visual do painel
 
   // ---------- autenticação ----------
   useEffect(() => {
@@ -143,7 +145,7 @@ export default function AdminLayout({ children }) {
 
   const pendingCount = unseen.length;
   return (
-    <AdminCtx.Provider value={{ sb, session, refreshUnseen: loadUnseen, pushToast }}>
+    <AdminCtx.Provider value={{ sb, session, refreshUnseen: loadUnseen, pushToast, ask }}>
       <div className="shell">
         <aside className={`side ${menu ? 'open' : ''}`}>
           <Link href="/admin" className="brand"><span className="mono" /><span><b>NEO STORE</b><small>PAINEL</small></span></Link>
@@ -198,6 +200,7 @@ export default function AdminLayout({ children }) {
           </div>
           <div className="page">{children}</div>
         </div>
+        {confirmDialog}
         <div className="toasts" aria-live="polite">
           {toasts.map((t) => (
             <Link key={t.id} href={t.href} className="toastx" style={t.ok ? { background: '#4E6B4A' } : null}>

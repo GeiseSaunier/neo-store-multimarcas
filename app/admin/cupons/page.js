@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAdmin } from '../_ctx';
 
 export default function Coupons() {
-  const { sb } = useAdmin();
+  const { sb, ask } = useAdmin();
   const [rows, setRows] = useState(null);
   const [code, setCode] = useState('');
   const [pct, setPct] = useState('10');
@@ -23,7 +23,7 @@ export default function Coupons() {
   }
   const toggleFirst = async (c) => { await sb.from('coupons').update({ first_purchase: !c.first_purchase }).eq('code', c.code); load(); };
   const toggle = async (c) => { await sb.from('coupons').update({ active: !c.active }).eq('code', c.code); load(); };
-  const remove = async (c) => { if (confirm(`Excluir o cupom ${c.code}?`)) { await sb.from('coupons').delete().eq('code', c.code); load(); } };
+  const remove = async (c) => { if (await ask({ title: `Excluir o cupom ${c.code}?`, message: 'Quem tiver o código não vai mais conseguir usar. Para parar só por um tempo, use “Pausado”.', confirmLabel: 'Excluir cupom', danger: true })) { await sb.from('coupons').delete().eq('code', c.code); load(); } };
   return (
     <>
       <div className="page-head"><div><h1>Cupons</h1><p>Códigos de desconto em porcentagem sobre as peças. Não vale para o frete nem para peças em promoção.</p></div></div>

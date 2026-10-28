@@ -107,7 +107,7 @@ function Editor({ promo, products, onClose, onSaved }) {
 }
 
 export default function Promotions() {
-  const { sb } = useAdmin();
+  const { sb, ask } = useAdmin();
   const [rows, setRows] = useState(null);
   const [products, setProducts] = useState([]);
   const [editing, setEditing] = useState(null); // {} = nova; objeto = editar
@@ -128,8 +128,8 @@ export default function Promotions() {
     setMsg(error ? 'Não foi possível atualizar a promoção.' : ok);
     load();
   }
-  const endNow = (p) => confirm(`Encerrar “${p.name}” agora? As peças voltam ao preço normal na hora.`) && update(p, { ends_at: new Date().toISOString() }, 'Promoção encerrada.');
-  const remove = async (p) => { if (!confirm(`Excluir a promoção “${p.name}”?`)) return; await sb.from('promotions').delete().eq('id', p.id); load(); };
+  const endNow = async (p) => { if (await ask({ title: `Encerrar “${p.name}” agora?`, message: 'As peças voltam ao preço normal na hora.', confirmLabel: 'Encerrar promoção', danger: true })) update(p, { ends_at: new Date().toISOString() }, 'Promoção encerrada.'); };
+  const remove = async (p) => { if (!(await ask({ title: `Excluir a promoção “${p.name}”?`, message: 'Ela some da lista. Se ainda estiver valendo, as peças voltam ao preço normal na hora.', confirmLabel: 'Excluir promoção', danger: true }))) return; await sb.from('promotions').delete().eq('id', p.id); load(); };
   const names = Object.fromEntries(products.map((p) => [p.id, p.name]));
 
   return (

@@ -61,3 +61,4 @@ table.t{width:100%;border-collapse:collapse;min-width:760px}
 .t .num{text-align:right;white-space:nowrap}
 .t .code{font-family:var(--serif);font-size:18px;color:var(--ink)}
 .thumb{width:44px;height:54px;border-radius:6px;object-fit:cover;background:var(--sand);display:block}
+.field input[aria-invalid="true"]{border-color:var(--bad);box-shadow:0 0 0 3px rgba(160,73,59,.12)}

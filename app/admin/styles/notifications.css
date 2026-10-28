@@ -14,3 +14,19 @@
 .toastx{background:var(--deep);color:#EFE3DC;border-radius:12px;padding:14px 18px;min-width:280px;box-shadow:0 16px 40px rgba(40,30,25,.25);animation:slide .35s cubic-bezier(.2,.7,.2,1);display:grid;gap:2px;text-decoration:none}
 .toastx b{font-weight:500}
 .toastx small{opacity:.75}
+
+/* ================= Janela de confirmação (ConfirmDialog) ================= */
+.confirm-wrap{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;background:rgba(62,51,45,.45);backdrop-filter:blur(3px);animation:confirmFade .18s ease-out}
+.confirm{width:min(440px,100%);background:var(--panel);border-radius:18px;padding:30px 28px 24px;box-shadow:0 24px 60px rgba(62,51,45,.28);text-align:center;animation:confirmIn .22s cubic-bezier(.2,.7,.2,1)}
+.confirm-ic{display:grid;place-items:center;width:46px;height:46px;margin:0 auto 14px;border-radius:50%;background:var(--tint);color:var(--ink);font-family:var(--serif);font-size:24px;line-height:1}
+.confirm-ic.bad{background:rgba(160,73,59,.1);color:var(--bad)}
+.confirm h2{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1.15;color:var(--ink);margin:0 0 10px}
+.confirm p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+.confirm-actions{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.confirm-actions .btn{min-width:130px}
+.btn.danger-solid{background:var(--bad);color:#fff}
+.btn.danger-solid:hover{background:#86392d}
+@keyframes confirmFade{from{opacity:0}}
+@keyframes confirmIn{from{opacity:0;transform:translateY(10px) scale(.98)}}
+@media (prefers-reduced-motion:reduce){.confirm-wrap,.confirm{animation:none}}
+@media (max-width:480px){.confirm-actions .btn{flex:1;min-width:0}}
