@@ -1,4 +1,4 @@
-# Roda os testes automáticos a cada envio para o GitHub e em cada pull request.
+# Roda os testes automáticos e o build a cada envio para o GitHub e em cada pull request.
 name: Testes
 on:
   push:
@@ -14,3 +14,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # O painel monta a conexão com o Supabase já no build: aqui bastam valores de
+      # mentira (as chaves de verdade ficam só na Vercel).
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-ci
+          NEXT_PUBLIC_SITE_URL: https://www.neostore.com.br
