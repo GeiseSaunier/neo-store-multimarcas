@@ -114,7 +114,8 @@ export async function POST(req) {
     } else {
       const { data: o } = await db.from('shipping_options').select('*').eq('id', shipping).eq('active', true).maybeSingle();
       if (!o) return fail('Escolha uma forma de entrega.');
-      ship = { id: o.id, label: o.name, cost: Number(o.price), toConfirm: o.to_confirm };
+      // "valor combinado pelo WhatsApp": não entra no total do pedido (é acertado depois)
+      ship = { id: o.id, label: o.name, cost: o.to_confirm ? 0 : Number(o.price), toConfirm: o.to_confirm };
     }
 
     const base = round2(subtotal - discount + ship.cost);

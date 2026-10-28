@@ -23,7 +23,7 @@ function Row({ o, onSaved, onRemoved }) {
     <div className="card" style={{ display: 'grid', gap: 14, opacity: f.active ? 1 : .65 }}>
       <div className="row">
         <div className="field"><label>Nome</label><input value={f.name} onChange={set('name')} /></div>
-        <div className="field"><label>Valor cobrado (R$)</label><input inputMode="decimal" value={f.price} onChange={set('price')} /><span className="help">Este valor entra no total do pedido.</span></div>
+        <div className="field"><label>Valor cobrado (R$)</label><input inputMode="decimal" value={f.price} onChange={set('price')} /><span className="help">{f.to_confirm ? 'Não é cobrado no pedido: o valor é combinado pelo WhatsApp.' : 'Este valor entra no total do pedido.'}</span></div>
         <div className="field"><label>Texto do valor (opcional)</label><input value={f.price_label} onChange={set('price_label')} placeholder="Ex.: R$ 40 a R$ 60" /><span className="help">Aparece no lugar do valor para a cliente.</span></div>
       </div>
       <div className="field"><label>Descrição</label><input value={f.description} onChange={set('description')} /></div>

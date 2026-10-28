@@ -14,7 +14,7 @@ function shipOpts(){const out=[];
     if(co.quotes&&co.quotes.length)co.quotes.forEach(q=>out.push({g:'Envio a domicílio',k:q.id,n:esc(q.name),d:`Chega entre ${fd(addBiz(q.min))} e ${fd(addBiz(q.max))}`,v:q.price}));
     else ['PAC','SEDEX'].forEach(n=>out.push({g:'Envio a domicílio',k:n.toLowerCase(),n:`Correios · ${n} (via Melhor Envio)`,d:co.quoting?'Calculando o frete…':co.quotes?'Indisponível para este CEP':'Informe o CEP para calcular',v:0,label:'—',off:1}));
   }
-  SHIP.regional.forEach(o=>out.push({g:'Entrega regional',k:o.id,n:esc(o.name),d:esc(o.description),v:o.price,label:o.price_label?esc(o.price_label):null,tbd:o.to_confirm}));
+  SHIP.regional.forEach(o=>out.push({g:'Entrega regional',k:o.id,n:esc(o.name),d:esc(o.description),v:o.to_confirm?0:o.price,label:o.price_label?esc(o.price_label):null,tbd:o.to_confirm}));
   return out}
 function shipListHTML(){let g='';return shipOpts().map(o=>{const head=o.g!==g?`<div class="ship-group">${(g=o.g)==='Envio a domicílio'?'<svg viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/></svg>':'<svg viewBox="0 0 24 24"><path d="M3 15h18l-2 4H5z"/><path d="M6 15V9h8l3 6M9 9V5h4v4"/></svg>'}${o.g}</div>`:'';
   return head+`<button class="ship-opt" data-ship="${o.k}" aria-pressed="${co.ship===o.k}" ${o.off?'disabled':''}><span>${o.n}<small>${o.d}</small></span><b>${o.label||(o.tbd?'Consulte':o.v?brl(o.v):'Grátis')}</b></button>`}).join('')+`<p class="hint" style="margin:10px 0 0">O prazo de entrega <b>não contabiliza feriados</b>.</p>`}

@@ -335,7 +335,7 @@ create policy "admin apaga fotos" on storage.objects for delete using (bucket_id
 insert into public.shipping_options (id, name, description, price, price_label, to_confirm, position) values
   ('parintins','Parintins','Entrega no mesmo dia',0,'Consulte',true,1),
   ('maues','Maués','Envio pelo barco',20,null,false,2),
-  ('manaus','Manaus','Barco + motoboy até a sua casa · cerca de 2 dias úteis · valor conforme o bairro',40,'R$ 40 a R$ 60',false,3),
+  ('manaus','Manaus','Barco + motoboy até a sua casa · cerca de 2 dias úteis · valor conforme o bairro, combinado pelo WhatsApp',0,'R$ 40 a R$ 60',true,3),
   ('barco','Entrega no barco, rodoviária ou táxi','Outros municípios · combinamos os dados pelo WhatsApp',20,null,false,4)
 on conflict (id) do nothing;
 
