@@ -16,3 +16,40 @@
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 /* alerta no topo da gaveta do pedido (ex.: estoque insuficiente) */
 .alert{background:rgba(160,73,59,.1);color:var(--bad);border:1px solid rgba(160,73,59,.3);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.55;margin-bottom:18px}
+/* ---------- crediário ---------- */
+.credit-kpis{grid-template-columns:repeat(3,1fr);margin-bottom:20px}
+.pay-line{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.pay-line:last-child{border-bottom:0}
+.pay-line b{font-weight:600;color:var(--ink)}
+.pay-line small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+/* ---------- custo e lucro ---------- */
+.profit-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.period{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.period .input{width:auto;padding:7px 10px}
+.profit-kpis{grid-template-columns:repeat(4,1fr);margin-bottom:20px}
+.kpi.hl{background:var(--deep);border-color:var(--deep)}
+.kpi.hl .lbl,.kpi.hl .s{color:rgba(239,227,220,.75)}
+.kpi.hl .v{color:#EFE3DC}
+.alert.warn{color:var(--wait);background:rgba(183,121,58,.1);border-color:rgba(183,121,58,.3)}
+.notice{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;background:rgba(94,122,90,.12);color:var(--ok);border:1px solid rgba(94,122,90,.3);border-radius:8px;padding:12px 14px;font-size:13px;margin-bottom:18px}
+.notice button{font-size:18px;line-height:1;color:inherit}
+.list-tools{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.list-tools .input{max-width:260px}
+.t .sub{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.profit-table td{vertical-align:top}
+.profit-table .pname{font-weight:500;color:var(--text)}
+.cost-inline{display:inline-flex;gap:6px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.cost-inline .input{width:96px;padding:6px 8px}
+.buy-line{border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;display:grid;gap:12px;background:var(--panel)}
+.buy-line legend{font-size:12px;color:var(--muted);padding:0 6px}
+.buy-foot{display:flex;justify-content:space-between;gap:10px;font-size:12px;flex-wrap:wrap}
+.linkish{text-decoration:underline;color:var(--bad);font-size:12px}
+.drawer-actions{display:grid;gap:10px;position:sticky;bottom:0;background:var(--bg);padding:14px 0 4px;border-top:1px solid var(--line)}
+.drawer-actions .btn{width:100%}
+.tot-line{display:flex;justify-content:space-between;font-size:15px;color:var(--ink)}
+.tot-line b{font-weight:600}
+.start{max-width:640px}
+.start ol{margin:0 0 20px;padding-left:20px;display:grid;gap:10px;line-height:1.6}
+.howto{margin-top:22px;font-size:13px;color:var(--muted)}
+.howto summary{cursor:pointer;color:var(--ink)}
+.howto ul{margin:10px 0 0;padding-left:20px;display:grid;gap:6px}

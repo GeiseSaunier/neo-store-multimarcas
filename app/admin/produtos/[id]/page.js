@@ -6,6 +6,8 @@ import { useAdmin } from '../../_ctx';
 import { BRANDS, SUBS } from '@/lib/config';
 import { shrink } from '@/lib/image';
 import Chips from '../../_components/Chips';
+import { parseMoney } from '@/lib/crediario';
+import { brl } from '@/lib/format';
 
 const EMPTY = { name: '', brand: 'capodarte', category: 'bolsas', price: '', old_price: '', description: '', details: '', sizes: ['Único'], colors: [], images: [], stock: '', size_stock: {}, brand_label: '', active: true, position: 0 };
 const SIZE_PRESETS = [['Único', ['Único']], ['33 ao 39', ['33', '34', '35', '36', '37', '38', '39']], ['PP ao GG', ['PP', 'P', 'M', 'G', 'GG']], ['36 ao 46', ['36', '38', '40', '42', '44', '46']]];
@@ -32,6 +34,9 @@ export default function ProductForm() {
 
   // Estoque como estava ao abrir a tela: serve para saber se ele foi editado aqui.
   const [origStock, setOrigStock] = useState(null);
+  // Custo da peça: só o painel vê (tabela product_costs), usado na página Custo e lucro.
+  const [cost, setCost] = useState('');
+  const [origCost, setOrigCost] = useState('');
 
   useEffect(() => {
     if (isNew) return;
@@ -39,6 +44,10 @@ export default function ProductForm() {
       if (!data) { setMsg({ t: 'Peça não encontrada.' }); return; }
       const form = toForm(data);
       setF(form); setOrigStock(stockKey(form));
+    });
+    sb.from('product_costs').select('cost').eq('product_id', id).maybeSingle().then(({ data }) => {
+      const c = data ? String(data.cost).replace('.', ',') : '';
+      setCost(c); setOrigCost(c);
     });
   }, [id, isNew, sb]);
 
@@ -72,6 +81,8 @@ export default function ProductForm() {
     if (!(price > 0)) return setMsg({ t: 'Informe o preço da peça.' });
     if (old !== null && !(old > price)) return setMsg({ t: 'O preço “de” precisa ser maior que o preço atual. Deixe vazio se a peça não estiver em promoção.' });
     if (!f.images.length) return setMsg({ t: 'Envie pelo menos uma foto.' });
+    const costValue = cost.trim() === '' ? null : parseMoney(cost);
+    if (costValue !== null && !(costValue >= 0)) return setMsg({ t: 'O custo precisa ser um valor, ex.: 380,00. Deixe vazio se não souber.' });
     setBusy('save'); setMsg({ t: '' });
     const sizes = f.sizes.length ? f.sizes : ['Único'];
     // Com mais de um tamanho, o estoque é por tamanho (o banco guarda a soma em "stock").
@@ -88,6 +99,7 @@ export default function ProductForm() {
       const { data, error } = await sb.from('products').insert(row).select().single();
       setBusy('');
       if (error) return setMsg({ t: 'Não foi possível salvar. Confira os campos e tente de novo.' });
+      if (costValue !== null) await saveCost(data.id, costValue);
       return router.replace(`/admin/produtos/${data.id}?salvo=1`);
     }
     // Vendas mexem no estoque enquanto a tela está aberta. Se o estoque não foi editado aqui,
@@ -110,7 +122,16 @@ export default function ProductForm() {
     }
     const saved = toForm(data[0]);
     setF(saved); setOrigStock(stockKey(saved));
+    if (cost.trim() !== origCost && !(await saveCost(id, costValue))) return setMsg({ t: 'A peça foi salva, mas o custo não. Tente salvar de novo.' });
     setMsg({ t: 'Alterações salvas. A loja já mostra a versão nova.', ok: true });
+  }
+  // Grava (ou apaga, com o campo vazio) o custo da peça. Devolve true se deu certo.
+  async function saveCost(productId, value) {
+    const { error } = value === null
+      ? await sb.from('product_costs').delete().eq('product_id', productId)
+      : await sb.from('product_costs').upsert({ product_id: productId, cost: value });
+    if (!error) { const c = value === null ? '' : String(value).replace('.', ','); setCost(c); setOrigCost(c); }
+    return !error;
   }
   async function remove() {
     if (!(await ask({ title: `Excluir “${f.name}”?`, message: 'Pedidos antigos continuam guardados. Se quiser só tirar da loja, desligue “Mostrar na loja”.', confirmLabel: 'Excluir peça', danger: true }))) return;
@@ -213,6 +234,11 @@ export default function ProductForm() {
             <div className="field"><label htmlFor="pr">Preço (R$)</label><input id="pr" inputMode="decimal" value={f.price} onChange={set('price')} placeholder="690,00" /></div>
             <div className="field"><label htmlFor="op">Preço “de” (opcional)</label><input id="op" inputMode="decimal" value={f.old_price} onChange={set('old_price')} placeholder="Só se estiver em promoção" /></div>
           </div>
+          <div className="field"><label htmlFor="cu">Quanto a peça custou (R$, opcional)</label><input id="cu" inputMode="decimal" value={cost} onChange={(e) => setCost(e.target.value)} placeholder="Ex.: 380,00" />
+            <span className="help">{(() => {
+              const c = parseMoney(cost), pr = Number(String(f.price).replace(',', '.'));
+              return c >= 0 && pr > 0 ? `Lucro de ${brl(pr - c)} por peça vendida pelo preço cheio (${Math.round((1 - c / pr) * 100)}%). Só aparece no painel.` : 'Só aparece no painel. Usado na página Custo e lucro.';
+            })()}</span></div>
           <div className="field"><label htmlFor="ds">Descrição</label><textarea id="ds" value={f.description} onChange={set('description')} placeholder="Como é a peça, para quem e para quê." /></div>
           <div className="field"><label htmlFor="dt">Detalhes (um por linha)</label><textarea id="dt" value={f.details} onChange={set('details')} style={{ minHeight: 80 }} placeholder={'Alças de ombro\nFechamento com zíper'} /></div>
         </div>

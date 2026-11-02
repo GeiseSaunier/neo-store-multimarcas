@@ -22,6 +22,7 @@ const nextConfig = {
     return [
       { source: '/:path*', headers: security },
       { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+      { source: '/crediario/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
     ];
   },
 };

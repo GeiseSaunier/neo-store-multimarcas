@@ -7,6 +7,7 @@ import { onlyDigits, round2, validCpf, brl } from '@/lib/format';
 import { applyPromo, loadActivePromos } from '@/lib/promo';
 import { STORE, PIX } from '@/lib/config';
 import { pixPayload } from '@/lib/pix';
+import { allocateNet } from '@/lib/lucro';
 import QRCode from 'qrcode';
 import { tooMany } from '@/lib/ratelimit';
 import { expireStaleOrders, stockMessage, stockText } from '@/lib/orders';
@@ -78,7 +79,7 @@ export async function POST(req) {
         const why = promo && price < Number(it.price) ? ' (entrou em promoção)' : !promo && price > Number(it.price) ? ' (a promoção terminou)' : '';
         return json({ error: `O preço de ${p.name} mudou para ${brl(price)}${why}. Atualizamos a sacola; confira o novo total.`, prices_changed: true }, 409);
       }
-      lines.push({ product_id: p.id, name: p.name, brand: p.brand, brand_label: p.brand_label || null, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: price, image: p.images?.[0] || null });
+      lines.push({ product_id: p.id, name: p.name, brand: p.brand, brand_label: p.brand_label || null, category: p.category, size, color: it.color || p.colors?.[0] || null, qty, unit_price: price, image: p.images?.[0] || null, promo: !!promo });
       if (!promo) couponBase += price * qty;
     }
     const subtotal = round2(lines.reduce((s, l) => s + l.unit_price * l.qty, 0));
@@ -130,7 +131,9 @@ export async function POST(req) {
       subtotal, discount, pix_discount: pixDiscount, total, coupon: couponCode, payment_method: payment,
     }).select().single();
     if (oe) throw oe;
-    const { error: ie } = await db.from('order_items').insert(lines.map((l) => ({ ...l, order_id: order.id })));
+    // quanto entrou por peça (sem frete), para o relatório de custo e lucro; o custo do dia o banco preenche
+    const nets = allocateNet(lines, { discount, pixDiscount, shipping: ship.cost });
+    const { error: ie } = await db.from('order_items').insert(lines.map(({ promo, ...l }, i) => ({ ...l, net_amount: nets[i], order_id: order.id })));
     if (ie) throw ie;
 
     // ---------- reserva as peças (no banco, à prova de duas compras ao mesmo tempo) ----------

@@ -151,6 +151,227 @@ create table if not exists public.subscribers (
   unique (channel, contact)
 );
 
+-- ---------- Crediário (vendas a prazo, controle no painel) ----------
+-- Uma linha por venda a prazo; cada pagamento da cliente fica em credit_payments.
+-- O que falta = total − soma dos pagamentos (calculado no painel, lib/crediario.js).
+create table if not exists public.credit_sales (
+  id uuid primary key default gen_random_uuid(),
+  customer_name text not null check (length(btrim(customer_name)) > 0),
+  phone text,
+  description text not null default '',      -- o que a cliente levou
+  total numeric(10,2) not null check (total > 0),
+  sold_on date not null,                      -- data da venda (dia de Parintins, enviado pelo painel)
+  notes text,
+  created_at timestamptz not null default now()
+);
+create index if not exists credit_sales_sold_idx on public.credit_sales (sold_on desc);
+-- Código do link que a cliente recebe para ver o extrato (/crediario/<código>).
+-- Separado do id para poder trocar o link sem mexer na venda.
+alter table public.credit_sales add column if not exists public_token uuid not null default gen_random_uuid();
+create unique index if not exists credit_sales_token_idx on public.credit_sales (public_token);
+
+create table if not exists public.credit_payments (
+  id uuid primary key default gen_random_uuid(),
+  sale_id uuid not null references public.credit_sales(id) on delete cascade,
+  amount numeric(10,2) not null check (amount > 0),
+  paid_on date not null,
+  note text,
+  created_at timestamptz not null default now()
+);
+create index if not exists credit_payments_sale_idx on public.credit_payments (sale_id, paid_on);
+
+-- A soma dos pagamentos nunca passa do valor da venda (nem ao lançar um pagamento,
+-- nem ao diminuir o valor da venda depois). Erro: 'CREDIARIO_EXCEDE|<quanto faltava>'.
+create or replace function public.credit_check_total() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare v_sale uuid; v_this numeric := 0; v_total numeric; v_paid numeric;
+begin
+  -- (new.sale_id só existe em credit_payments, então cada tabela no seu ramo)
+  if tg_table_name = 'credit_sales' then
+    v_sale := new.id;
+  else
+    v_sale := new.sale_id; v_this := new.amount;
+  end if;
+  select total into v_total from public.credit_sales where id = v_sale for update;
+  select coalesce(sum(amount), 0) into v_paid from public.credit_payments where sale_id = v_sale;
+  if v_paid > v_total then
+    raise exception 'CREDIARIO_EXCEDE|%', v_total - (v_paid - v_this);
+  end if;
+  return null;
+end; $$;
+drop trigger if exists credit_payments_check on public.credit_payments;
+create constraint trigger credit_payments_check after insert or update on public.credit_payments
+  for each row execute function public.credit_check_total();
+drop trigger if exists credit_sales_check on public.credit_sales;
+create constraint trigger credit_sales_check after update of total on public.credit_sales
+  for each row execute function public.credit_check_total();
+revoke execute on function public.credit_check_total() from public, anon, authenticated;
+
+alter table public.credit_sales enable row level security;
+alter table public.credit_payments enable row level security;
+drop policy if exists "admin crediario" on public.credit_sales;
+create policy "admin crediario" on public.credit_sales for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin crediario pagamentos" on public.credit_payments;
+create policy "admin crediario pagamentos" on public.credit_payments for all using (public.is_admin()) with check (public.is_admin());
+
+-- ---------- Custo e lucro (painel) ----------
+-- Custo de cada peça. Fica fora de products porque a vitrine lê products com a chave
+-- pública: aqui só o admin enxerga.
+create table if not exists public.product_costs (
+  product_id uuid primary key references public.products(id) on delete cascade,
+  cost numeric(10,2) not null check (cost >= 0),
+  updated_at timestamptz not null default now()
+);
+
+-- Cada item vendido guarda o custo do dia da venda (mudar o custo depois não altera vendas antigas)
+-- e quanto entrou de fato por ele: preço − parte do cupom − parte do desconto PIX, sem frete.
+alter table public.order_items add column if not exists unit_cost numeric(10,2);
+alter table public.order_items add column if not exists net_amount numeric(10,2);
+create or replace function public.order_items_cost() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.unit_cost is null and new.product_id is not null then
+    select cost into new.unit_cost from public.product_costs where product_id = new.product_id;
+  end if;
+  return new;
+end; $$;
+drop trigger if exists order_items_cost on public.order_items;
+create trigger order_items_cost before insert on public.order_items for each row execute function public.order_items_cost();
+
+-- Muda o estoque de uma peça (p_delta < 0 tira, > 0 devolve) e diz quanto mudou de fato:
+-- nunca fica negativo, e peça sem controle de estoque não muda (devolve 0).
+create or replace function public.adjust_product_stock(p_product uuid, p_size text, p_delta int) returns int
+language plpgsql security definer set search_path = public as $$
+declare p record; avail int; d int;
+begin
+  select id, stock, size_stock into p from public.products where id = p_product for update;
+  if not found then return 0; end if;
+  if p.size_stock is not null then
+    avail := coalesce((p.size_stock ->> coalesce(p_size, 'Único'))::int, 0);
+    d := greatest(p_delta, -avail);
+    if d <> 0 then update public.products set size_stock = jsonb_set(size_stock, array[coalesce(p_size, 'Único')], to_jsonb(avail + d)) where id = p.id; end if;
+  elsif p.stock is not null then
+    d := greatest(p_delta, -p.stock);
+    if d <> 0 then update public.products set stock = stock + d where id = p.id; end if;
+  else
+    d := 0;
+  end if;
+  return d;
+end; $$;
+revoke execute on function public.adjust_product_stock(uuid, text, int) from public, anon, authenticated;
+
+-- Vendas feitas fora do site (loja, WhatsApp, crediário). Baixam o estoque ao lançar e
+-- devolvem ao excluir; stock_taken guarda quanto saiu de fato (o estoque pode já estar em 0).
+create table if not exists public.manual_sales (
+  id uuid primary key default gen_random_uuid(),
+  product_id uuid references public.products(id) on delete set null,
+  name text not null check (length(btrim(name)) > 0),  -- nome da peça no dia (fica mesmo se a peça for excluída)
+  size text,
+  qty integer not null check (qty > 0),
+  unit_price numeric(10,2) not null check (unit_price >= 0), -- por quanto vendeu cada unidade
+  unit_cost numeric(10,2) check (unit_cost >= 0),            -- vazio = usa o custo cadastrado da peça
+  channel text not null default 'loja' check (channel in ('loja','whatsapp','crediario','outro')),
+  sold_on date not null,
+  notes text,
+  stock_taken integer not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists manual_sales_sold_idx on public.manual_sales (sold_on desc);
+
+create or replace function public.manual_sales_stock() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.product_id is not null then
+      if new.unit_cost is null then select cost into new.unit_cost from public.product_costs where product_id = new.product_id; end if;
+      new.stock_taken := -public.adjust_product_stock(new.product_id, new.size, -new.qty);
+    else
+      new.stock_taken := 0;
+    end if;
+    return new;
+  elsif tg_op = 'UPDATE' then
+    -- (product_id virar vazio é a peça sendo excluída: a venda fica guardada com o nome)
+    if (new.product_id is distinct from old.product_id and new.product_id is not null) or new.size is distinct from old.size or new.qty <> old.qty or new.stock_taken <> old.stock_taken then
+      raise exception 'VENDA_FIXA'; -- peça, tamanho e quantidade não mudam: exclua e lance de novo
+    end if;
+    return new;
+  else
+    if old.product_id is not null and old.stock_taken > 0 then
+      perform public.adjust_product_stock(old.product_id, old.size, old.stock_taken);
+    end if;
+    return old;
+  end if;
+end; $$;
+drop trigger if exists manual_sales_stock on public.manual_sales;
+create trigger manual_sales_stock before insert or update or delete on public.manual_sales for each row execute function public.manual_sales_stock();
+
+-- Compras de mercadoria para revenda. Cada item soma ao estoque da peça e vira o custo atual
+-- dela (as vendas seguintes guardam esse custo). Excluir devolve o que entrou, sem ficar negativo.
+create table if not exists public.purchases (
+  id uuid primary key default gen_random_uuid(),
+  supplier text not null default '',
+  bought_on date not null,
+  notes text,
+  created_at timestamptz not null default now()
+);
+create index if not exists purchases_bought_idx on public.purchases (bought_on desc);
+
+create table if not exists public.purchase_items (
+  id uuid primary key default gen_random_uuid(),
+  purchase_id uuid not null references public.purchases(id) on delete cascade,
+  product_id uuid references public.products(id) on delete set null,
+  name text not null check (length(btrim(name)) > 0),  -- nome da peça no dia (fica mesmo se a peça for excluída)
+  size text,
+  qty integer not null check (qty > 0),
+  unit_cost numeric(10,2) not null check (unit_cost >= 0),
+  stock_added integer not null default 0,                -- quanto entrou de fato no estoque
+  created_at timestamptz not null default now()
+);
+create index if not exists purchase_items_purchase_idx on public.purchase_items (purchase_id);
+create index if not exists purchase_items_product_idx on public.purchase_items (product_id);
+
+create or replace function public.purchase_items_stock() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare taken int;
+begin
+  if tg_op = 'INSERT' then
+    new.stock_added := 0;
+    if new.product_id is not null then
+      new.stock_added := public.adjust_product_stock(new.product_id, new.size, new.qty);
+      insert into public.product_costs (product_id, cost) values (new.product_id, new.unit_cost)
+        on conflict (product_id) do update set cost = excluded.cost;
+    end if;
+    return new;
+  elsif tg_op = 'UPDATE' then
+    -- (product_id virar vazio é a peça sendo excluída: a compra fica guardada com o nome)
+    if (new.product_id is distinct from old.product_id and new.product_id is not null) or new.size is distinct from old.size or new.qty <> old.qty or new.stock_added <> old.stock_added then
+      raise exception 'COMPRA_FIXA'; -- peça, tamanho e quantidade não mudam: exclua e lance de novo
+    end if;
+    return new;
+  else
+    if old.product_id is not null and old.stock_added > 0 then
+      taken := public.adjust_product_stock(old.product_id, old.size, -old.stock_added);
+    end if;
+    return old;
+  end if;
+end; $$;
+drop trigger if exists purchase_items_stock on public.purchase_items;
+create trigger purchase_items_stock before insert or update or delete on public.purchase_items for each row execute function public.purchase_items_stock();
+
+alter table public.purchases enable row level security;
+alter table public.purchase_items enable row level security;
+drop policy if exists "admin compras" on public.purchases;
+create policy "admin compras" on public.purchases for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin itens de compra" on public.purchase_items;
+create policy "admin itens de compra" on public.purchase_items for all using (public.is_admin()) with check (public.is_admin());
+
+alter table public.product_costs enable row level security;
+alter table public.manual_sales enable row level security;
+drop policy if exists "admin custos" on public.product_costs;
+create policy "admin custos" on public.product_costs for all using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "admin vendas manuais" on public.manual_sales;
+create policy "admin vendas manuais" on public.manual_sales for all using (public.is_admin()) with check (public.is_admin());
+
 -- ---------- updated_at automático ----------
 create or replace function public.touch_updated_at() returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end; $$;
@@ -158,6 +379,8 @@ drop trigger if exists products_touch on public.products;
 create trigger products_touch before update on public.products for each row execute function public.touch_updated_at();
 drop trigger if exists orders_touch on public.orders;
 create trigger orders_touch before update on public.orders for each row execute function public.touch_updated_at();
+drop trigger if exists product_costs_touch on public.product_costs;
+create trigger product_costs_touch before update on public.product_costs for each row execute function public.touch_updated_at();
 
 -- ---------- Estoque ----------
 -- Estoque por tamanho (calçados): {"35": 2, "36": 0}. Vazio = usa a coluna stock.

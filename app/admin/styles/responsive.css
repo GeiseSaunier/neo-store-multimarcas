@@ -15,4 +15,8 @@
   .login{grid-template-columns:1fr}
   .login .art{min-height:180px}
 }
+@media (max-width:560px){
+  .credit-kpis,.profit-kpis{grid-template-columns:1fr}
+  .profit-bar .seg{width:100%}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
