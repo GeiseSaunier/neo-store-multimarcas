@@ -3,28 +3,50 @@
 Este projeto tem três partes que funcionam juntas:
 
 - **A loja** (`/`): o site que as clientes veem, com vitrine, sacola e checkout.
-- **O painel** (`/admin`): onde vocês cadastram peças e acompanham pedidos, pagamentos e vendas do mês.
-- **Os serviços externos**: Supabase (banco de dados, login e fotos), Mercado Pago (pagamentos), Melhor Envio (frete dos Correios, opcional) e Resend (e-mails, opcional).
-
-Siga os passos na ordem. Leva cerca de uma hora na primeira vez.
+- **O painel** (`/admin`): onde vocês cadastram peças e acompanham pedidos, pagamentos, crediário, custo e lucro.
+- **Os serviços externos**: Supabase (banco de dados, login e fotos), Vercel (hospedagem), Mercado Pago (cartão e boleto), Melhor Envio (frete dos Correios, opcional) e Resend (e-mails, opcional).
 
 ---
 
-## 1. Supabase: banco de dados, login e fotos
+# Colocar a loja no ar (passo a passo)
 
-1. Crie uma conta em **supabase.com** e clique em **New project**. Escolha a região **São Paulo** e guarde a senha do banco.
+Siga **na ordem**. Na primeira vez leva cerca de uma hora e meia. Cada etapa diz se é **obrigatória** ou **opcional**.
+
+> **Atenção à ordem:** a Vercel publica o site assim que o repositório é ligado a ela. Por isso o banco (etapa 1) e as variáveis (etapa 4) vêm **antes** do primeiro deploy. Sem eles, o build falha ou o checkout quebra.
+
+### Resumo
+
+| # | Etapa | Obrigatória? |
+|---|---|---|
+| 1 | Supabase: banco, administrador e segurança do login | Sim |
+| 2 | Mercado Pago: cartão e boleto | Sim, para aceitar cartão ou boleto |
+| 3 | Resend (e-mails) e Melhor Envio (Correios) | Opcional |
+| 4 | Vercel: variáveis e primeiro deploy | Sim |
+| 5 | Domínio próprio e endereços finais | Sim (ou use o endereço `.vercel.app`) |
+| 6 | Dados da loja: empresa, entregas, peças e estoque | Sim |
+| 7 | Compra de teste e limpeza | Sim |
+| 8 | Abrir para as clientes | — |
+
+---
+
+## 1. Supabase: banco de dados, login e fotos (obrigatória)
+
+### 1.1 Criar o projeto e o banco
+
+1. Crie uma conta em **supabase.com** e clique em **New project**. Escolha a região **São Paulo** e guarde a senha do banco num lugar seguro.
 2. No menu lateral, abra **SQL Editor > New query**.
-3. Abra o arquivo `supabase/schema.sql` deste projeto, copie todo o conteúdo, cole no editor e clique em **Run**.
-   Isso cria as tabelas, as regras de segurança, o espaço das fotos, as opções de entrega, o cupom BEMVINDA (só na primeira compra) e as 6 bolsas atuais.
-   Se o banco já tinha sido criado com uma versão anterior, apague o cupom **NEO10** em Painel > Cupons (ele não deve mais existir).
-4. Abra **Project Settings > API** e anote três valores:
+3. Abra o arquivo `supabase/schema.sql` deste projeto, copie **todo** o conteúdo, cole no editor e clique em **Run**.
+   Isso cria as tabelas (pedidos, peças, crediário, custo e lucro, promoções etc.), as regras de segurança, o espaço das fotos, as opções de entrega, o cupom BEMVINDA (só na primeira compra) e as 6 bolsas iniciais.
+   - Pode rodar de novo sempre que o arquivo mudar: ele só acrescenta o que falta e não apaga dados.
+   - Se o banco já existia de uma versão antiga, apague depois o cupom **NEO10** (Painel > Cupons).
+4. Abra **Project Settings > API** e anote três valores (eles vão para a Vercel na etapa 4):
    - **Project URL**
    - **anon public** (chave pública)
    - **service_role** (chave secreta: nunca compartilhe nem coloque no site)
 
-### Criar o acesso do administrador
+### 1.2 Criar o acesso do administrador
 
-1. Abra **Authentication > Users > Add user > Create new user**. Informe o e-mail e uma senha e marque **Auto Confirm User**.
+1. Abra **Authentication > Users > Add user > Create new user**. Informe o e-mail e uma senha forte e marque **Auto Confirm User**.
 2. Copie o **User UID** que aparece na lista.
 3. Volte ao **SQL Editor** e rode, trocando pelo UID copiado:
 
@@ -32,40 +54,49 @@ Siga os passos na ordem. Leva cerca de uma hora na primeira vez.
    insert into public.admins (user_id) values ('COLE-O-UID-AQUI');
    ```
 
-Repita esses passos para cada pessoa que vai usar o painel.
+Repita para cada pessoa que vai usar o painel.
 
-### Bloquear cadastros públicos
+### 1.3 Segurança do login
 
-Em **Authentication > Sign In / Providers**, desligue **Allow new users to sign up**. Os acessos do painel são criados só por vocês, como no passo acima.
-
-### Link de recuperação de senha
-
-Em **Authentication > URL Configuration**, coloque o endereço do site em **Site URL** (ex.: `https://www.neostore.com.br`) e adicione `https://www.neostore.com.br/admin/login` em **Redirect URLs**.
+- **Bloquear cadastros públicos:** em **Authentication > Sign In / Providers**, desligue **Allow new users to sign up**. Os acessos ao painel são criados só por vocês, como no passo acima.
+- **Recuperação de senha:** em **Authentication > URL Configuration**, coloque o endereço do site em **Site URL** (ex.: `https://www.neostore.com.br`) e adicione `https://www.neostore.com.br/admin/login` em **Redirect URLs**. Se ainda não tiver o domínio, use o endereço da Vercel e troque na etapa 5.
 
 ---
 
-## 2. Pagamentos: PIX direto, cartão e boleto (Mercado Pago)
+## 2. Mercado Pago: cartão e boleto
 
-**PIX direto na conta da loja.** O PIX não passa pelo Mercado Pago: o checkout gera o QR Code e o copia e cola com a chave da loja (CNPJ 32.315.010/0001-02, Vanessa Neo Gomes · Nubank), o valor exato e um identificador (`NEO` + número do pedido). A confirmação é **manual**: quando o PIX cair na Nubank (a cliente também manda o comprovante pelo WhatsApp), abra o pedido no painel e use **Marcar como pago**. A cliente recebe o e-mail e a tela dela muda sozinha. A chave e os dados ficam em `PIX` (`lib/config.js` e `public/loja/js/config.js`); com `direct: false` o PIX volta a ser pelo Mercado Pago, com confirmação automática.
+**O PIX não precisa do Mercado Pago.** O checkout gera o QR Code e o copia e cola com a chave da loja (CNPJ 32.315.010/0001-02, Vanessa Neo Gomes · Nubank), o valor exato e um identificador (`NEO` + número do pedido). A confirmação é **manual**: quando o PIX cair na Nubank (a cliente também manda o comprovante pelo WhatsApp), abra o pedido no painel e use **Marcar como pago**. A cliente recebe o e-mail e a tela dela muda sozinha. A chave fica em `PIX` (`lib/config.js` e `public/loja/js/config.js`); com `direct: false`, o PIX volta a ser pelo Mercado Pago, com confirmação automática.
 
-**Cartão e boleto** continuam pelo Mercado Pago:
+> **Importante:** cartão e boleto **aparecem no checkout mesmo sem o Mercado Pago configurado**, e a cliente recebe um erro ao finalizar. Não abra a loja para as clientes sem concluir esta etapa (ou peça para esconder cartão e boleto).
 
 1. Entre na sua conta Mercado Pago (conta de vendedor) e acesse **Suas integrações** em mercadopago.com.br/developers.
 2. Crie uma aplicação do tipo **Pagamentos online**.
-3. Em **Credenciais de produção**, copie o **Access Token**.
-   Para testar antes de vender, use primeiro as **Credenciais de teste**.
+3. Copie o **Access Token**: primeiro o das **Credenciais de teste** (para a etapa 7) e, depois, o das **Credenciais de produção** (para a etapa 8).
 4. Em **Webhooks**, configure:
-   - **URL**: `https://SEU-SITE/api/webhooks/mercadopago`
+   - **URL**: `https://SEU-SITE/api/webhooks/mercadopago` (o endereço final da etapa 5)
    - **Evento**: marque **Pagamentos**
    - Salve e copie a **Assinatura secreta**.
+5. Nas configurações de vendas da conta, confira se o parcelamento em até 3x está como **sem juros para o comprador**.
 
 O parcelamento está limitado a 3x e o desconto do PIX é de 5%. Para mudar, edite `lib/config.js`.
 
-Os juros do parcelamento sem juros são configurados na própria conta Mercado Pago. Confira se o parcelamento em até 3x está como "sem juros para o comprador" nas configurações de vendas.
-
 ---
 
-## 3. Melhor Envio: PAC e SEDEX (opcional)
+## 3. E-mails e Correios (opcionais)
+
+### 3.1 Resend: e-mails de aviso
+
+Sem esta etapa a loja funciona e os avisos aparecem no painel, mas ninguém recebe e-mail.
+
+1. Crie uma conta em **resend.com** e adicione o domínio da loja em **Domains** (siga as instruções de DNS no lugar onde o domínio foi comprado).
+2. Em **API Keys**, crie uma chave.
+3. Defina quem envia (ex.: `Neo Store <pedidos@neostore.com.br>`) e quem recebe os avisos de pedido.
+
+E-mails enviados:
+- **Para vocês:** novo pedido, pagamento confirmado e alertas de erro.
+- **Para a cliente:** pedido recebido (com link para pagar), pagamento confirmado, pedido enviado (com rastreio) e pedido entregue.
+
+### 3.2 Melhor Envio: PAC e SEDEX
 
 Sem esta etapa, a loja funciona só com as entregas regionais (Parintins, Maués, Manaus, barco).
 
@@ -73,71 +104,104 @@ Sem esta etapa, a loja funciona só com as entregas regionais (Parintins, Maués
 2. Em **Integrações > Permissões de acesso**, gere um token com permissão de **cálculo de frete** (`shipping-calculate`).
 3. Anote o token e o CEP de onde os pedidos saem.
 
-As medidas padrão da embalagem são 15 × 35 × 40 cm e 1 kg por peça. Ajuste nas variáveis `PKG_...` se preferir.
+As medidas padrão da embalagem são 15 × 35 × 40 cm e 1 kg por peça. Ajuste nas variáveis `PKG_...`, se preferir.
 
 ---
 
-## 4. Resend: e-mails de aviso (opcional)
+## 4. Vercel: variáveis e primeiro deploy (obrigatória)
 
-Sem esta etapa, os avisos continuam aparecendo no painel, mas ninguém recebe e-mail.
+O código já está no GitHub (repositório `neo-store-multimarcas`, ramo `main`).
 
-1. Crie uma conta em **resend.com** e adicione o domínio da loja em **Domains** (siga as instruções de DNS).
-2. Em **API Keys**, crie uma chave.
-3. Defina quem envia (ex.: `Neo Store <pedidos@neostore.com.br>`) e quem recebe os avisos de pedido.
+1. Em **vercel.com**, entre com a conta do GitHub e clique em **Add New > Project**. Escolha o repositório. A Vercel reconhece o Next.js sozinha.
+2. **Antes de clicar em Deploy**, abra **Environment Variables** e cadastre as variáveis abaixo (os nomes estão também em `.env.example`):
 
-E-mails enviados:
-- **Para vocês:** novo pedido e pagamento confirmado.
-- **Para a cliente:** pedido recebido (com link para pagar), pagamento confirmado, pedido enviado (com rastreio) e pedido entregue.
+| Variável | Onde pegar | Obrigatória? |
+|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | Endereço do site, sem barra no final (ex.: `https://www.neostore.com.br`) | Sim |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase > Project URL | Sim (sem ela, o build falha) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase > anon public | Sim (sem ela, o build falha) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase > service_role | Sim |
+| `CRON_SECRET` | Invente uma senha longa (ex.: num gerador de senhas). A rotina diária usa para cancelar pedidos abandonados e limpar fotos sem uso | Sim |
+| `MP_ACCESS_TOKEN` | Mercado Pago > Access Token (comece com o **de teste**) | Para cartão e boleto |
+| `MP_WEBHOOK_SECRET` | Mercado Pago > Webhooks > Assinatura secreta | Para cartão e boleto |
+| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_NOTIFY_EMAILS` | Resend | Opcional |
+| `MELHOR_ENVIO_TOKEN`, `MELHOR_ENVIO_EMAIL`, `STORE_CEP` | Melhor Envio | Opcional |
+| `PKG_HEIGHT_CM`, `PKG_WIDTH_CM`, `PKG_LENGTH_CM`, `PKG_WEIGHT_KG` | Medidas da embalagem | Opcional |
+
+3. Clique em **Deploy** e espere terminar (2 a 4 minutos). A Vercel mostra um endereço `https://….vercel.app`.
+4. Abra o endereço: a loja deve aparecer com as peças. Abra `/admin` e entre com o usuário da etapa 1.2.
+
+Daqui em diante, **cada envio para o ramo `main` do GitHub publica o site sozinho**. A rotina diária (`vercel.json`) já fica ligada.
+
+> Mudou alguma variável depois? Ela só passa a valer depois de um novo deploy: **Deployments > ⋯ > Redeploy**.
 
 ---
 
-## 5. Vercel: colocar no ar
+## 5. Domínio próprio e endereços finais (obrigatória)
 
-1. Suba esta pasta para um repositório no **GitHub** (pode ser privado).
-2. Em **vercel.com**, clique em **Add New > Project** e importe o repositório. A Vercel reconhece o Next.js sozinha.
-3. Antes de clicar em **Deploy**, abra **Environment Variables** e cadastre as variáveis do arquivo `.env.example`:
+1. Na Vercel, abra **Settings > Domains**, adicione `www.neostore.com.br` (e `neostore.com.br`) e siga as instruções de DNS no lugar onde o domínio foi comprado. Pode levar algumas horas para começar a valer.
+2. Com o domínio funcionando, confira se o endereço final está igual em **todos** estes lugares:
+   - Vercel > `NEXT_PUBLIC_SITE_URL` (depois faça **Redeploy**)
+   - Supabase > Authentication > URL Configuration (Site URL e Redirect URLs)
+   - Mercado Pago > Webhooks > URL (`https://www.neostore.com.br/api/webhooks/mercadopago`)
 
-| Variável | Onde pegar |
+---
+
+## 6. Dados da loja (obrigatória)
+
+1. **Empresa:** confira nome, CNPJ, cidades, e-mail e Instagram em **dois arquivos**: `lib/config.js` e `public/loja/js/config.js` (objeto `LEGAL`). Eles aparecem no rodapé, nas páginas de informação e no PDF do relatório de vendas. O **e-mail está vazio** até a loja ter um e-mail com domínio próprio; enquanto estiver vazio, ele não aparece no site.
+2. **Textos legais:** revise `content/trocas.md`, `content/privacidade.md` e `app/(info)/pagamentos/page.js`. Eles seguem o Código de Defesa do Consumidor e a LGPD, mas vale uma revisão com o contador ou o advogado da loja.
+3. **Entregas:** em Painel > Entregas, confira cidades, valores e descrições. Eles aparecem sozinhos no trajeto da página inicial e na sacola.
+4. **Peças e estoque:** em Painel > Produtos, confira as peças e as fotos e **preencha o estoque** de cada uma (as 6 bolsas iniciais vêm sem controle de estoque). Peça sem estoque preenchido nunca esgota.
+5. **Custo das peças (opcional, para o lucro):** em Painel > Custo e lucro > Compras e estoque, lance as compras de mercadoria. Assim o lucro de cada venda aparece certo.
+
+Mudou algo nos arquivos? Envie para o GitHub e a Vercel publica sozinha.
+
+---
+
+## 7. Compra de teste e limpeza (obrigatória)
+
+Com o **token de teste** do Mercado Pago:
+
+1. Cadastre uma peça com foto e confira se ela aparece na loja.
+2. Faça uma compra com **PIX**: o QR Code deve aparecer. No painel, abra o pedido e use **Marcar como pago**. A tela da cliente deve mudar sozinha.
+3. Faça uma compra com **cartão de teste** (o Mercado Pago lista os cartões de teste em Suas integrações). O pedido deve virar **Pago** sozinho.
+4. Confira se os e-mails chegam (se configurou o Resend).
+5. Marque um pedido como **Enviado**, com código de rastreio, e veja se o e-mail chega para a cliente.
+6. Em **Custo e lucro**, confira se as vendas aparecem e teste **Imprimir ou salvar em PDF**.
+
+**Limpeza dos testes:** o painel ainda não apaga pedidos. Cancele os pedidos de teste no painel (o estoque volta) ou apague-os no Supabase, em **Table Editor > orders**. Apague também as vendas de teste em Custo e lucro (botão **Apagar**) e confira o estoque das peças.
+
+---
+
+## 8. Abrir para as clientes
+
+1. Na Vercel, troque `MP_ACCESS_TOKEN` (e `MP_WEBHOOK_SECRET`, se mudou) pelos de **produção** e faça **Redeploy**.
+2. Faça uma compra real pequena com cartão e estorne pelo Mercado Pago, para confirmar que está tudo certo.
+3. Divulgue o endereço.
+
+### Lista final antes de divulgar
+
+- [ ] `supabase/schema.sql` mais recente rodado no Supabase
+- [ ] Usuário administrador criado e cadastros públicos desligados
+- [ ] Todas as variáveis obrigatórias cadastradas na Vercel e o deploy concluído
+- [ ] Domínio próprio funcionando, com o mesmo endereço na Vercel, no Supabase e no webhook do Mercado Pago
+- [ ] Token de **produção** do Mercado Pago na Vercel (ou cartão e boleto escondidos)
+- [ ] Estoque preenchido em todas as peças e entregas conferidas
+- [ ] Compra de teste com PIX e com cartão funcionando, e pedidos de teste limpos
+
+### Se algo der errado
+
+| Sintoma | O que conferir |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | Endereço do site, sem barra no final |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase > Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase > anon public |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase > service_role |
-| `MP_ACCESS_TOKEN` | Mercado Pago > Access Token |
-| `MP_WEBHOOK_SECRET` | Mercado Pago > Webhooks > Assinatura secreta |
-| `MELHOR_ENVIO_TOKEN`, `STORE_CEP`, `MELHOR_ENVIO_EMAIL` | Melhor Envio (opcional) |
-| `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_NOTIFY_EMAILS` | Resend (opcional) |
-| `CRON_SECRET` | Invente uma senha longa (ex.: gerador de senhas). Usada pela rotina diária que cancela pedidos abandonados |
-
-4. Clique em **Deploy**. Ao terminar, conecte o domínio próprio em **Settings > Domains**.
-5. Se o endereço final mudou, atualize `NEXT_PUBLIC_SITE_URL` na Vercel e a URL do webhook no Mercado Pago, e faça um novo deploy.
-
----
-
-## 6. Dados da empresa e textos legais
-
-Antes de abrir a loja, confira os dados da empresa (nome, CNPJ, cidades, e-mail e Instagram) em **dois arquivos**: `lib/config.js` (objeto `LEGAL`) e `public/loja/js/config.js` (objeto `LEGAL`). Eles aparecem no rodapé da loja e nas páginas de informação.
-
-Depois revise os trechos marcados com `[PREENCHER]` e `[DATA]` em:
-- `content/trocas.md` (Trocas e devoluções)
-- `content/privacidade.md` (Política de privacidade)
-- `app/(info)/pagamentos/page.js` (Formas de pagamento)
-
-Os textos seguem o Código de Defesa do Consumidor e a LGPD, mas vale uma revisão com o contador ou advogado da loja.
-
----
-
-## 7. Teste antes de abrir para clientes
-
-Com as **credenciais de teste** do Mercado Pago:
-
-1. Entre em `/admin` com o usuário criado.
-2. Cadastre uma peça com foto e confira se ela aparece na loja.
-3. Faça uma compra com PIX e outra com cartão de teste (o Mercado Pago lista cartões de teste em Suas integrações).
-4. Confira se o pedido aparece no painel, se o status muda para **Pago** sozinho e se os e-mails chegam.
-5. Marque um pedido como **Enviado** com código de rastreio e veja se a cliente recebe o e-mail.
-
-Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção** e faça um novo deploy.
+| O build falha na Vercel | `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` cadastradas |
+| A loja abre sem peças | `SUPABASE_SERVICE_ROLE_KEY` e se o `schema.sql` foi rodado |
+| O checkout dá erro | `schema.sql` mais recente rodado; no cartão e no boleto, `MP_ACCESS_TOKEN` |
+| Cartão pago não vira **Pago** | URL e assinatura do webhook no Mercado Pago e `MP_WEBHOOK_SECRET` |
+| Não consigo entrar no painel | Usuário criado com **Auto Confirm** e UID inserido na tabela `admins` |
+| O link de recuperar senha abre o endereço errado | Site URL e Redirect URLs no Supabase |
+| Os e-mails não chegam | `RESEND_API_KEY` e domínio verificado no Resend |
+| PAC e SEDEX não aparecem | `MELHOR_ENVIO_TOKEN` e `STORE_CEP` |
 
 ---
 
@@ -157,6 +221,8 @@ Quando tudo estiver certo, troque `MP_ACCESS_TOKEN` pelo token de **produção**
 - **Cupom de boas-vindas:** marque **Só na primeira compra** para o cupom valer uma única vez por CPF (o BEMVINDA já vem assim). O cadastro de novidades só cita o BEMVINDA enquanto ele estiver ativo.
 - **Pedido de exclusão de dados (LGPD):** em Painel > Novidades, use **Excluir** no contato.
 - **Relatório do mês:** Painel > Visão geral. Para planilha, use **Exportar planilha** em Pedidos.
+- **Custo e lucro:** na aba **Vendas e lucro**, digite quanto pagou e por quanto vendeu: o lucro aparece na hora. **Guardar no relatório** grava a venda (peça do catálogo sai do estoque). As vendas do site entram sozinhas. Escolha o mês para ver o balanço, a peça que mais e a que menos deu lucro, **Imprimir ou salvar em PDF** e **Baixar planilha**. Na aba **Compras e estoque**, lance as compras de mercadoria e veja o que está parado no estoque.
+- **Crediário:** Painel > Crediário. Lance a venda a prazo e cada pagamento da cliente; o link do extrato pode ser enviado para ela pelo WhatsApp.
 
 ---
 
@@ -186,10 +252,14 @@ neo-store/
 │   │   ├── pedidos/page.js          Lista de pedidos, filtros e exportação
 │   │   ├── produtos/page.js         Lista de peças
 │   │   ├── produtos/[id]/page.js    Cadastro e edição de peça (id "nova" para criar)
+│   │   ├── lucro/page.js            Custo e lucro: calculadora, relatório de vendas (PDF e planilha), compras e estoque
+│   │   ├── crediario/page.js        Vendas a prazo e pagamentos
+│   │   ├── promocoes/page.js        Promoções com início e fim
 │   │   ├── fretes/page.js           Entregas regionais
 │   │   ├── cupons/page.js           Cupons de desconto
 │   │   └── assinantes/page.js       Cadastros de novidades
 │   ├── pedido/[id]/                 Página de status do pedido (volta do Mercado Pago)
+│   ├── crediario/[token]/           Extrato do crediário para a cliente (link secreto)
 │   └── api/                         Rotas do servidor
 │       ├── products/                GET  peças ativas da vitrine
 │       ├── shipping/                GET  entregas regionais (+ se Correios está ligado)
@@ -218,6 +288,9 @@ neo-store/
 │   ├── pix.js                       Código PIX copia e cola (BR Code do Banco Central)
 │   ├── photos.js                    Limpeza segura das fotos sem uso no Storage
 │   ├── ratelimit.js                 Limite de tentativas por IP (no banco, função rate_hit)
+│   ├── crediario.js                 Contas do crediário (em centavos)
+│   ├── lucro.js                     Contas de custo e lucro, calculadora e relatório de vendas
+│   ├── lucro-dados.js               Leitura e gravação do Custo e lucro no banco (único ponto de acesso)
 │   ├── csv.js                       Exportação de planilhas
 │   └── image.js                     Redução de fotos antes do envio
 ├── public/
