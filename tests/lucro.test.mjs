@@ -1,7 +1,9 @@
 // Custo e lucro: divisão dos descontos por peça (lib/lucro.js), relatório e regras do banco.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { allocateNet, itemsRevenue, profitReport } from '../lib/lucro.js';
+import { allocateNet, itemsRevenue, profitReport, pieceResult, pctText, moneyText, monthLabel, monthsOf, saleLines, salesSummary, salesCsv } from '../lib/lucro.js';
+import { parseMoney } from '../lib/crediario.js';
+import { csvText } from '../lib/csv.js';
 import { createDb } from './helpers/db.mjs';
 
 const sum = (a) => Math.round(a.reduce((s, v) => s + v * 100, 0)) / 100;
@@ -192,4 +194,81 @@ test('banco: peça com compra e venda lançadas pode ser excluída (o histórico
   const [o] = await t.rows("insert into products (name, brand, category, price) values ('Outra', 'capodarte', 'bolsas', 1) returning id");
   const [v] = await t.rows("insert into manual_sales (name, qty, unit_price, sold_on) values ('Avulsa', 1, 1, '2026-11-03') returning id");
   assert.match(await t.error('update manual_sales set product_id = $1 where id = $2', [o.id, v.id]), /VENDA_FIXA/);
+});
+
+// ---------- calculadora e relatório de vendas ----------
+test('calculadora: pagou 50 e vendeu 80 = lucro de 30 e 60% em cima do que pagou', () => {
+  const r = pieceResult(50, 80);
+  assert.deepEqual(r, { kind: 'lucro', profit: 30, pct: 0.6 });
+  assert.equal(pctText(r.pct), '60%');
+});
+
+test('calculadora: pagou 100 e vendeu 70 = prejuízo de 30', () => {
+  assert.deepEqual(pieceResult(100, 70), { kind: 'prejuizo', profit: -30, pct: -0.3 });
+});
+
+test('calculadora: pagou 40 e vendeu 40 = zero a zero', () => {
+  assert.deepEqual(pieceResult(40, 40), { kind: 'zero', profit: 0, pct: 0 });
+});
+
+test('calculadora: centavos certos, peça sem custo e valores digitados de vários jeitos', () => {
+  assert.equal(pieceResult(0.1, 0.3).profit, 0.2);
+  assert.equal(pieceResult(0, 25).pct, null);
+  for (const [txt, v] of [['45', 45], ['45,90', 45.9], ['1.250,00', 1250], ['45.90', 45.9]]) assert.equal(parseMoney(txt), v, txt);
+  assert.equal(moneyText(45.9), '45,90');
+  assert.equal(moneyText(1250), '1.250,00');
+  assert.equal(pctText(1 / 3), '33,3%');
+  assert.equal(monthLabel('2026-03'), 'Março de 2026');
+});
+
+const VENDAS = {
+  orders: [{ id: 'o1', paid_at: '2026-11-05T15:00:00Z', discount: 0, pix_discount: 0, shipping_cost: 0, order_items: [
+    { product_id: 'bolsa', name: 'Bolsa', size: 'Único', qty: 1, unit_price: 790, net_amount: 750, unit_cost: 380 },
+    { product_id: 'nec', name: 'Necessaire', size: 'Único', qty: 1, unit_price: 350, net_amount: 350, unit_cost: null },
+  ] }],
+  manual: [
+    { id: 'm1', product_id: null, name: 'Vestido', qty: 1, unit_price: 80, unit_cost: 50, channel: 'loja', sold_on: '2026-11-03', created_at: '2026-11-03T10:00:00Z', stock_taken: 0 },
+    { id: 'm2', product_id: null, name: 'Blusa', qty: 2, unit_price: 35, unit_cost: 50, channel: 'whatsapp', sold_on: '2026-10-20', created_at: '2026-10-20T10:00:00Z', stock_taken: 0 },
+    { id: 'm3', product_id: null, name: 'Cinto', qty: 1, unit_price: 90, unit_cost: null, channel: 'loja', sold_on: '2026-10-21', created_at: '2026-10-21T10:00:00Z', stock_taken: 0 },
+  ],
+  costs: {},
+};
+
+test('relatório de vendas: uma linha por venda (site e lançadas), da mais recente para a mais antiga', () => {
+  const lines = saleLines(VENDAS);
+  assert.deepEqual(lines.map((l) => l.name), ['Bolsa', 'Necessaire', 'Vestido', 'Cinto', 'Blusa']);
+  const bolsa = lines[0];
+  assert.deepEqual([bolsa.source, bolsa.channel, bolsa.date, bolsa.cost, bolsa.price, bolsa.profit], ['site', 'site', '2026-11-05', 380, 750, 370]);
+  const blusa = lines.find((l) => l.name === 'Blusa');
+  assert.deepEqual([blusa.cost, blusa.price, blusa.profit], [100, 70, -30]);
+  // sem custo na venda: usa o custo atual da peça, se houver
+  assert.equal(saleLines({ ...VENDAS, costs: { nec: 120 } }).find((l) => l.name === 'Necessaire').profit, 230);
+  assert.deepEqual(monthsOf(lines.map((l) => l.date)), ['2026-11', '2026-10']);
+});
+
+test('balanço: só com as vendas que têm o valor pago; melhor e pior peça', () => {
+  const s = salesSummary(saleLines(VENDAS));
+  // conhecidas: Bolsa (380 → 750), Vestido (50 → 80), Blusa 2× (100 → 70)
+  assert.deepEqual([s.count, s.cost, s.price, s.profit, s.kind], [4, 530, 900, 370, 'lucro']);
+  assert.equal(Math.round(s.pct * 1000), Math.round((370 / 530) * 1000));
+  assert.equal(s.average, 92.5);
+  assert.equal(s.best.name, 'Bolsa');
+  assert.equal(s.worst.name, 'Blusa');
+  assert.deepEqual([s.missingQty, s.missingPrice], [2, 440]);
+  const one = salesSummary(saleLines({ manual: [VENDAS.manual[0]] }));
+  assert.deepEqual([one.best, one.worst], [null, null]);
+  assert.equal(salesSummary([]).count, 0);
+});
+
+test('planilha de vendas: vírgula nos valores, prejuízo como número e linha de total', () => {
+  const lines = saleLines({ manual: VENDAS.manual.slice(0, 2) });
+  const { filename, header, rows } = salesCsv(lines, '2026-11');
+  assert.equal(filename, 'neo_store-relatorio-2026-11.csv');
+  assert.equal(csvText(header, rows, { comma: true }), [
+    '"Data";"Peça";"Quantidade";"Onde vendeu";"Paguei (R$)";"Vendi (R$)";"Lucro (R$)"',
+    '"03/11/2026";"Vestido";"1";"Loja";"50,00";"80,00";"30,00"',
+    '"20/10/2026";"Blusa";"2";"WhatsApp";"100,00";"70,00";"-30,00"',
+    '"Total";"3 peças";"3";"";"150,00";"150,00";"0,00"',
+  ].join('\n'));
+  assert.equal(salesCsv(lines).filename, 'neo_store-relatorio-todos-os-meses.csv');
 });

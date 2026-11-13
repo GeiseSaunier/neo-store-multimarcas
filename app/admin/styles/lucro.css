@@ -1,0 +1,164 @@
+/* ---------- Custo e lucro (/admin/lucro) ----------
+   Mesmo visual do painel, com letras, campos e botões maiores (página pensada também para o celular). */
+.calc{font-size:16px;font-variant-numeric:lining-nums} /* números retos também na fonte serifada (11, não II) */
+.calc .card h2,.calc-sub{font-family:var(--serif);font-weight:500;font-size:28px;color:var(--ink);margin:0 0 18px}
+.calc-sub{margin:30px 0 16px}
+.calc .field{gap:8px}
+.calc .field label{font-size:15px;color:var(--text);font-weight:500}
+.calc .field label .muted{font-weight:400}
+.calc .field input,.calc .field select{height:54px;font-size:19px;padding:0 16px;border-radius:10px}
+.calc .field .help{font-size:14px}
+.calc .field .err{font-size:14px}
+.calc .btn{height:52px;padding:0 26px;font-size:16px}
+.calc .btn.small{height:40px;padding:0 16px;font-size:14px}
+.calc .btn svg{width:20px;height:20px}
+.calc .alert,.calc .notice{font-size:15px}
+
+/* abas + período */
+.calc-bar{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.calc-tabs button{height:48px;padding:0 22px;font-size:16px;border-color:var(--line2)}
+.calc-period{min-width:240px}
+
+/* calculadora */
+.calc-card{display:grid;gap:22px}
+.calc-card h2{margin:0}
+.calc-fields{display:grid;gap:18px 20px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.calc-wide{grid-column:1/-1}
+/* sugestões de peças da loja (no lugar da lista do navegador) */
+.combo{position:relative}
+.combo-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:20;margin:0;padding:6px;list-style:none;background:var(--panel);border:1px solid var(--line2);border-radius:12px;box-shadow:0 14px 34px rgba(62,51,45,.16);max-height:340px;overflow-y:auto}
+.combo-list li{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 14px;border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:17px;color:var(--text)}
+.combo-list li.on{background:var(--tint);color:var(--deep)}
+.combo-list li small{font-size:14px;color:var(--muted);white-space:nowrap}
+.calc-result{border-radius:14px;padding:20px 22px;display:grid;gap:6px;font-size:17px;border:1px solid var(--line)}
+.calc-big{font-family:var(--serif);font-weight:500;font-size:36px;line-height:1.15}
+.calc-result.wait{background:var(--tint);color:var(--muted)}
+.calc-result.lucro,.calc-balance.lucro{background:rgba(94,122,90,.12);border-color:rgba(94,122,90,.35);color:var(--ok)}
+.calc-result.prejuizo,.calc-balance.prejuizo{background:rgba(160,73,59,.1);border-color:rgba(160,73,59,.35);color:var(--bad)}
+.calc-result.zero,.calc-balance.zero{background:var(--tint);color:var(--ink)}
+.calc-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.calc-actions [role="status"]{font-size:16px}
+
+/* relatório */
+.calc-balance{border-radius:16px;padding:24px 26px;display:grid;gap:6px;font-size:17px;border:1px solid var(--line);margin-bottom:18px}
+.calc-balance .lbl{font-size:14px;color:var(--muted)}
+.calc-balance .calc-big{font-size:44px}
+.calc-kpis{display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:18px}
+.calc-kpis.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.calc .kpi .lbl{font-size:14px}
+.calc .kpi .v{font-size:30px;overflow-wrap:anywhere}
+.calc .kpi .v.small{font-size:24px}
+.calc .kpi .v.neg{color:var(--bad)}
+.calc .kpi .s{font-size:14px}
+.calc table.calc-table{min-width:700px;font-size:16px}
+.calc-table th{font-size:14px}
+.calc-table tbody tr{cursor:default}
+.calc-table tbody tr:hover{background:none}
+.calc-table .profit.lucro{color:var(--ok);font-weight:600}
+.calc-table .profit.prejuizo{color:var(--bad);font-weight:600}
+.calc-table tfoot td{padding:14px 16px;border-top:2px solid var(--line2);font-weight:600;color:var(--deep)}
+.calc-table .linkish{font-size:15px;padding:6px 4px}
+.calc .empty{font-size:16px}
+
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:1000px){
+  .calc-fields{grid-template-columns:1fr 1fr}
+  .calc-kpis{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .calc-fields,.calc-kpis.two{grid-template-columns:1fr}
+  .calc-big{font-size:30px}
+  .calc-balance .calc-big{font-size:34px}
+  .calc .kpi .v{font-size:24px}
+  .calc .card{padding:18px}
+  .calc-actions .btn{flex:1 1 100%}
+  .calc-tabs{width:100%}
+  .calc-tabs button{flex:1 1 0;padding:0 10px}
+  .calc-period{min-width:0;width:100%}
+}
+
+/* ---------- Relatório para imprimir ou salvar em PDF ----------
+   Folha A4 com a identidade da loja: logo no cabeçalho (repete em todas as páginas),
+   número da página no rodapé e os dados da empresa no fim. Na tela fica escondido. */
+.rp{display:none}
+@media print{
+  @page{
+    size:A4;margin:12mm 14mm 16mm;
+    @bottom-left{content:"Neo Store Multimarcas · Relatório de vendas";font-family:Montserrat,Arial,sans-serif;font-size:7.5pt;color:#8A7A70}
+    @bottom-right{content:"Página " counter(page) " de " counter(pages);font-family:Montserrat,Arial,sans-serif;font-size:7.5pt;color:#8A7A70}
+  }
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{background:#fff!important;height:auto}
+  .side,.topbar,.scrim,.toastx,.no-print,.confirm-wrap,.drawer{display:none!important}
+  .shell,.main{display:block;min-height:0}
+  .page{padding:0!important;max-width:none}
+
+  .rp{display:block;color:var(--text);font-family:var(--sans);font-size:9.5pt;line-height:1.45;font-variant-numeric:lining-nums}
+  .rp-table tbody.rp-keep{break-inside:avoid}
+  .rp-frame{width:100%;border-collapse:collapse}
+  .rp-frame > thead > tr > td,.rp-frame > tbody > tr > td{padding:0}
+
+  /* cabeçalho */
+  .rp-head{display:flex;justify-content:space-between;align-items:flex-end;gap:8mm;padding-bottom:3.5mm;margin-bottom:7mm;border-bottom:.6pt solid var(--ink)}
+  .rp-logo{height:10mm;width:auto;display:block}
+  .rp-head-r{display:grid;gap:.5mm;text-align:right}
+  .rp-head-r b{font-family:var(--serif);font-weight:500;font-size:12.5pt;color:var(--ink)}
+  .rp-head-r span{font-size:7pt;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+  /* título */
+  .rp-title{display:flex;justify-content:space-between;align-items:flex-end;gap:10mm;margin-bottom:6mm}
+  .rp-title small{font-size:7pt;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+  .rp-title h1{font-family:var(--serif);font-weight:400;font-size:30pt;line-height:1.05;color:var(--deep);margin:1mm 0 1.5mm}
+  .rp-title p{margin:0;color:var(--muted)}
+  .rp-meta{margin:0;display:grid;gap:2mm;text-align:right}
+  .rp-meta dt{font-size:6.5pt;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .rp-meta dd{margin:0;font-size:9pt}
+
+  /* balanço */
+  .rp-balance{display:grid;grid-template-columns:1fr 1.5fr;border:.6pt solid var(--line2);border-radius:3.5mm;overflow:hidden;margin-bottom:4mm;break-inside:avoid}
+  .rp-main{position:relative;overflow:hidden;background:var(--deep);color:#EFE3DC;padding:6mm 7mm;display:grid;gap:1.2mm;align-content:center}
+  .rp-main::after{content:"";position:absolute;right:-6mm;top:-8mm;width:30mm;height:40mm;background:#EFE3DC;opacity:.06;-webkit-mask:var(--mono) center/contain no-repeat;mask:var(--mono) center/contain no-repeat}
+  .rp-main span{font-size:7pt;letter-spacing:.2em;text-transform:uppercase;opacity:.8}
+  .rp-main b{font-family:var(--serif);font-weight:400;font-size:30pt;line-height:1}
+  .rp-main em{font-style:normal;font-size:8.5pt}
+  .rp-balance.lucro .rp-main em{color:#A9C9A3}
+  .rp-balance.prejuizo .rp-main b,.rp-balance.prejuizo .rp-main em{color:#E6A99D}
+  .rp-kpis{display:grid;grid-template-columns:1fr 1fr;background:var(--panel)}
+  .rp-kpis div{padding:4mm 5mm;border-left:.6pt solid var(--line)}
+  .rp-kpis div:nth-child(-n+2){border-bottom:.6pt solid var(--line)}
+  .rp-kpis span,.rp-two span,.rp-channels > span{display:block;font-size:6.5pt;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .rp-kpis b{font-family:var(--serif);font-weight:500;font-size:16pt;color:var(--ink)}
+  .rp .neg{color:var(--bad)}
+  .rp .pos{color:var(--ok)}
+
+  /* destaques e canais */
+  .rp-two{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-bottom:4mm;break-inside:avoid}
+  .rp-two div{background:var(--tint);border-radius:3mm;padding:4mm 5mm;display:grid;gap:.8mm}
+  .rp-two b{font-family:var(--serif);font-weight:500;font-size:13pt;color:var(--deep);line-height:1.2}
+  .rp-two em{font-style:normal;font-size:8.5pt}
+  .rp-channels{display:flex;flex-wrap:wrap;align-items:baseline;gap:2mm 6mm;padding:3mm 0;border-top:.5pt solid var(--line);border-bottom:.5pt solid var(--line);margin-bottom:2mm;break-inside:avoid}
+  .rp-channels div{font-size:8.5pt}
+  .rp-channels b{color:var(--ink);font-weight:600}
+  .rp-warn{margin:3mm 0 0;padding:2.5mm 4mm;border-radius:2mm;background:rgba(183,121,58,.1);color:var(--wait);font-size:8.5pt}
+
+  /* tabela */
+  .rp-h2{font-family:var(--serif);font-weight:500;font-size:15pt;color:var(--ink);margin:6mm 0 2.5mm}
+  .rp-table{width:100%;border-collapse:collapse;font-size:8.8pt}
+  .rp-table thead{display:table-header-group}
+  .rp-table th{background:var(--sand);color:var(--deep);font-weight:600;font-size:6.8pt;letter-spacing:.12em;text-transform:uppercase;text-align:left;padding:2.4mm 3mm}
+  .rp-table td{padding:1.7mm 3mm;border-bottom:.5pt solid var(--line);vertical-align:top}
+  .rp-table tr.z td{background:#FBF7F4}
+  .rp-table tr{break-inside:avoid}
+  .rp-table .num{text-align:right;white-space:nowrap}
+  .rp-table th.num{text-align:right}
+  .rp-table .nowrap{white-space:nowrap}
+  .rp-table td.pos,.rp-table td.neg{font-weight:600}
+  .rp-table tr.rp-total td{background:var(--tint)!important;border-top:1pt solid var(--ink);border-bottom:0;font-weight:600;color:var(--deep)}
+  .rp-note{margin:2.5mm 0 0;font-size:7.5pt;color:var(--muted)}
+
+  /* fim */
+  .rp-end{display:flex;align-items:center;gap:5mm;margin-top:9mm;padding-top:4mm;border-top:.6pt solid var(--line2);font-size:8pt;color:var(--muted);line-height:1.6;break-inside:avoid}
+  .rp-end img{height:11mm;width:auto}
+  .rp-end b{color:var(--ink);font-weight:600}
+}

@@ -7,6 +7,7 @@ import './styles/orders.css';
 import './styles/products.css';
 import './styles/notifications.css';
 import './styles/login.css';
+import './styles/lucro.css';
 import './styles/responsive.css'; // sempre por último
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
